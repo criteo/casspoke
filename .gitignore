@@ -1,3 +1,5 @@
+# Created by .ignore support plugin (hsz.mobi)
+### Java template
 # Compiled class file
 *.class
 
@@ -33,3 +35,5 @@ build/
 # Gradle build system
 .gradle/
 gradle/
+.gitignore
+build

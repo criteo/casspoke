@@ -1,0 +1,22 @@
+app:
+  tickRateInSec: 5
+  httpServerPort: 8080
+
+consul:
+  host: consul01-am5.central.criteo.prod:8500
+#  host: consul.service.consul
+  port: 8500
+  timeoutInSec: 10
+  readConsistency: STALE
+  refreshEveryMin: 1
+
+service:
+  type: CASSANDRA
+  timeoutInSec: 60
+  tags:
+    - cluster=cstars04
+    # - cassandra
+    # - cluster=couchs13
+    # - bucket=Similarities.Persisted
+    # - cluster=mems19
+    # - cluster=mem-shared-s01
