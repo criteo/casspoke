@@ -33,14 +33,9 @@ public class CassandraMonitor implements AutoCloseable {
     public Map<InetSocketAddress, Boolean> collectAvailability() {
 
         final Map<InetSocketAddress, Boolean> availabilities = new HashMap<>();
-        final LoadBalancingPolicy loadBalancingPolicy =
-                cluster.getConfiguration().getPolicies().getLoadBalancingPolicy();
-        final PoolingOptions poolingOptions =
-                cluster.getConfiguration().getPoolingOptions();
 
         Session.State state = session.getState();
         for (Host host : cluster.getMetadata().getAllHosts()) {
-            HostDistance distance = loadBalancingPolicy.distance(host);
             int connections = state.getOpenConnections(host);
             availabilities.put(host.getSocketAddress(), connections > 0);
             logger.debug("%s connections=%d\n", host, connections);
@@ -57,7 +52,7 @@ public class CassandraMonitor implements AutoCloseable {
         try {
             // Todo: port dynamic with consul
             List<InetAddress> socks = endPoints.stream()
-                    .map(e -> new InetSocketAddress(e.getAddress(), 9042).getAddress())
+                    .map(e -> new InetSocketAddress(e.getAddress(), service.getPort()).getAddress())
                     .collect(Collectors.toList());
 
             PoolingOptions poolingOptions = new PoolingOptions();
