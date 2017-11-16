@@ -107,11 +107,6 @@ public class CassandraRunner implements Runnable {
                     break;
                 }
 
-                // todo: clear
-                Optional<Map.Entry<HealthService.Service, List<HealthService.Node>>> t = new_services.entrySet().stream().filter(e -> e.getKey().getPort() == 9042).findFirst();
-                new_services.clear();
-                new_services.put(t.get().getKey(),t.get().getValue());
-
                 // Check if topology has changed
                 if(Consul.areServicesEquals(services, new_services))
                     break;
