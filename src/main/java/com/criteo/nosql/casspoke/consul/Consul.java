@@ -93,10 +93,8 @@ public class Consul implements AutoCloseable
             final Service[] srv = new Service[] { null };
             client.getHealthServices(service.getKey(), false, params).getValue().stream()
                   .filter(hsrv -> hsrv.getChecks().stream()
-                                    .noneMatch(check -> check.getCheckId().equalsIgnoreCase(MAINTENANCE_MODE)
-                                                        || check.getOutput().startsWith("DISCARD:") // For couchbase, flaky but don't have better, come propose me better
-                                                        || (check.getCheckId().startsWith("service:couchbase") && check.getOutput().isEmpty())
-                                    ))
+                                    .noneMatch(check -> check.getCheckId().equalsIgnoreCase(MAINTENANCE_MODE))
+                  )
                   .forEach(hsrv -> {
                       logger.debug("{}", hsrv.getNode());
                       nodes.add(new InetSocketAddress(hsrv.getNode().getAddress(), hsrv.getService().getPort()));

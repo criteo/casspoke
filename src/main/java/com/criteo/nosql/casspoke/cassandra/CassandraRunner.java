@@ -121,15 +121,13 @@ public class CassandraRunner implements Runnable {
                         .collect(Collectors.toMap(Map.Entry::getKey, e -> CassandraMonitor.fromNodes(e.getKey(), e.getValue(), cfg.getService().timeoutInSec * 1000L)));
 
                 metrics = new HashMap<>(monitors.size());
-                for(Map.Entry<Service, Optional<CassandraMonitor>> client: monitors.entrySet()) {
-                    metrics.put(client.getKey(), new CassandraMetrics(client.getKey()));
-                }
+                monitors.forEach((Service, v) -> metrics.put(Service, new CassandraMetrics(Service)));
                 break;
 
             case POKE:
-                monitors.entrySet().parallelStream().forEach(client -> {
-                    CassandraMetrics m = metrics.get(client.getKey());
-                    m.updateAvailability(client.getValue().map(CassandraMonitor::collectAvailability).orElse(Collections.EMPTY_MAP));
+                monitors.forEach((service, monitor) -> {
+                    CassandraMetrics m = metrics.get(service);
+                    m.updateAvailability(monitor.map(CassandraMonitor::collectAvailability).orElse(Collections.EMPTY_MAP));
                 });
                 break;
         }

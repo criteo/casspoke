@@ -6,20 +6,18 @@ import com.datastax.driver.core.policies.RoundRobinPolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class CassandraMonitor implements AutoCloseable {
     private static Logger logger = LoggerFactory.getLogger(CassandraMonitor.class);
 
     private final Service service;
-    private static Cluster cluster = null;
+    private final Cluster cluster;
     private final long timeoutInMs;
     private final Session session;
 
-    private CassandraMonitor(Service service, Cluster cluster, long timeoutInMs) {
+    private CassandraMonitor(final Service service, final Cluster cluster, long timeoutInMs) {
         this.service = service;
         this.cluster = cluster;
         this.timeoutInMs = timeoutInMs;
@@ -46,20 +44,14 @@ public class CassandraMonitor implements AutoCloseable {
         }
 
         try {
-            // Todo: port dynamic with consul
-            List<InetAddress> socks = endPoints.stream()
-                    .map(InetSocketAddress::getAddress)
-                    .collect(Collectors.toList());
-
             PoolingOptions poolingOptions = new PoolingOptions();
 
             poolingOptions
                     .setConnectionsPerHost(HostDistance.LOCAL,  1, 2)
                     .setConnectionsPerHost(HostDistance.REMOTE, 1, 2);
 
-            cluster = Cluster.builder()
-                    .addContactPoints(socks)
-                    .withPort(9042)
+            final Cluster cluster = Cluster.builder()
+                    .addContactPointsWithPorts(endPoints)
                     .withPoolingOptions(poolingOptions)
                     .withLoadBalancingPolicy(new RoundRobinPolicy())
                     .build();
