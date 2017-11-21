@@ -17,8 +17,7 @@ import java.util.concurrent.TimeUnit;
 
 import static java.util.stream.Collectors.toList;
 
-public class Consul implements AutoCloseable
-{
+public class Consul implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(Consul.class);
     private static final String MAINTENANCE_MODE = "_node_maintenance";
 
@@ -28,8 +27,7 @@ public class Consul implements AutoCloseable
     private final QueryParams params;
     private final ExecutorService executor;
 
-    public Consul(final String host, final int port, final int timeout, final String readConsistency)
-    {
+    public Consul(final String host, final int port, final int timeout, final String readConsistency) {
         this.host = host;
         this.port = port;
         this.timeout = timeout;
@@ -37,71 +35,65 @@ public class Consul implements AutoCloseable
         this.executor = Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setNameFormat("consul-%d").build());
     }
 
-    public static boolean areServicesEquals(final Map<Service, Set<InetSocketAddress>> ori, Map<Service, Set<InetSocketAddress>> neo)
-    {
+    public static boolean areServicesEquals(final Map<Service, Set<InetSocketAddress>> ori, Map<Service, Set<InetSocketAddress>> neo) {
         //TODO Improve complexity of the function
         if (ori.size() != neo.size()) {
             return false;
         }
 
-        for(Map.Entry<Service, Set<InetSocketAddress>> e: ori.entrySet()) {
-           Set<InetSocketAddress> addresses = neo.getOrDefault(e.getKey(), Collections.emptySet());
-           if (addresses.size() != e.getValue().size() || !e.getValue().containsAll(addresses)) {
-               return false;
-           }
+        for (Map.Entry<Service, Set<InetSocketAddress>> e : ori.entrySet()) {
+            Set<InetSocketAddress> addresses = neo.getOrDefault(e.getKey(), Collections.emptySet());
+            if (addresses.size() != e.getValue().size() || !e.getValue().containsAll(addresses)) {
+                return false;
+            }
         }
 
         return true;
     }
 
-    private static String getFromTags(final HealthService.Service service, final String prefix){
+    private static String getFromTags(final HealthService.Service service, final String prefix) {
         return service.getTags().stream()
                 .filter(tag -> tag.startsWith(prefix))
                 .map(tag -> tag.substring(prefix.length()))
                 .findFirst().orElse("NotDefined");
     }
 
-    public static String getClusterName(final HealthService.Service service)
-    {
+    public static String getClusterName(final HealthService.Service service) {
         return getFromTags(service, "cluster=");
     }
 
-    public static String getBucketName(final HealthService.Service service)
-    {
+    public static String getBucketName(final HealthService.Service service) {
         return getFromTags(service, "bucket=");
     }
 
-    private Map<Service, Set<InetSocketAddress>> getServicesNodesForImpl(List<String> tags)
-    {
+    private Map<Service, Set<InetSocketAddress>> getServicesNodesForImpl(List<String> tags) {
         ConsulClient client = new ConsulClient(host, port);
-        final String[] platformSuffixes = new String[] {"-eu", "-us", "-as"};
+        final String[] platformSuffixes = new String[]{"-eu", "-us", "-as"};
 
         List<Map.Entry<String, List<String>>> services =
-        client.getCatalogServices(params).getValue().entrySet().stream()
-              .filter(entry -> !Collections.disjoint(entry.getValue(), tags)
-                               && Arrays.stream(platformSuffixes).noneMatch(suffix -> entry.getKey().toLowerCase().endsWith(suffix)))
-              .map(entry -> {
-                  logger.info("Found service matching {}", entry.getKey());
-                  return entry;
-              })
-              .collect(toList());
+                client.getCatalogServices(params).getValue().entrySet().stream()
+                        .filter(entry -> !Collections.disjoint(entry.getValue(), tags)
+                                && Arrays.stream(platformSuffixes).noneMatch(suffix -> entry.getKey().toLowerCase().endsWith(suffix)))
+                        .map(entry -> {
+                            logger.info("Found service matching {}", entry.getKey());
+                            return entry;
+                        })
+                        .collect(toList());
 
         Map<Service, Set<InetSocketAddress>> servicesNodes = new HashMap<>(services.size());
-        for (Map.Entry<String, List<String>> service : services)
-        {
+        for (Map.Entry<String, List<String>> service : services) {
             final Set<InetSocketAddress> nodes = new HashSet<>();
-            final Service[] srv = new Service[] { null };
+            final Service[] srv = new Service[]{null};
             client.getHealthServices(service.getKey(), false, params).getValue().stream()
-                  .filter(hsrv -> hsrv.getChecks().stream()
-                                    .noneMatch(check -> check.getCheckId().equalsIgnoreCase(MAINTENANCE_MODE))
-                  )
-                  .forEach(hsrv -> {
-                      logger.debug("{}", hsrv.getNode());
-                      nodes.add(new InetSocketAddress(hsrv.getNode().getAddress(), hsrv.getService().getPort()));
-                      srv[0] = new Service(Consul.getClusterName(hsrv.getService()), Consul.getBucketName(hsrv.getService()));
-                  });
-            if (nodes.size() > 0)
-            {
+                    .filter(hsrv -> hsrv.getChecks().stream()
+                            .noneMatch(check -> check.getCheckId().equalsIgnoreCase(MAINTENANCE_MODE))
+                    )
+                    .forEach(hsrv -> {
+                        logger.debug("{}", hsrv.getNode());
+                        nodes.add(new InetSocketAddress(hsrv.getNode().getAddress(), hsrv.getService().getPort()));
+                        srv[0] = new Service(Consul.getClusterName(hsrv.getService()), Consul.getBucketName(hsrv.getService()));
+                    });
+            if (nodes.size() > 0) {
                 servicesNodes.put(srv[0], nodes);
             }
         }
@@ -118,11 +110,9 @@ public class Consul implements AutoCloseable
      * Thus we play safe and wrap calls inside an executor that we can properly timeout, and a new consul client
      * is created each time.
      */
-    public Map<Service, Set<InetSocketAddress>> getServicesNodesFor(List<String> tags)
-    {
+    public Map<Service, Set<InetSocketAddress>> getServicesNodesFor(List<String> tags) {
         Future<Map<Service, Set<InetSocketAddress>>> fServices = null;
-        try
-        {
+        try {
             fServices = executor.submit(() -> {
                 logger.info("Fetching services for tag {} ", tags);
                 long start = System.currentTimeMillis();
@@ -134,13 +124,10 @@ public class Consul implements AutoCloseable
                 return services;
             });
             return fServices.get(timeout, TimeUnit.SECONDS);
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             logger.error("Cannot fetch nodes for tag {}", tags, e);
 
-            if (fServices != null)
-            {
+            if (fServices != null) {
                 fServices.cancel(true);
             }
             return Collections.emptyMap();
@@ -148,8 +135,7 @@ public class Consul implements AutoCloseable
     }
 
     @Override
-    public void close()
-    {
+    public void close() {
         executor.shutdownNow();
     }
 }

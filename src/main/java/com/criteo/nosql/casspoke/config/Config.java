@@ -13,12 +13,15 @@ import java.util.Optional;
 /**
  * Configuration class that are use by the app
  * Use fromFile method in order to transform a yaml file into an config's instance
- *
+ * <p>
  * TODO (r.gerard): Improve the class, add substructure for consul and services instead of Map<String,String>
  */
 public final class Config {
 
     public static final String DEFAULT_PATH = "config.yml";
+    private Map<String, String> app;
+    private Map<String, String> consul;
+    private Services service;
 
     public static Optional<Config> fromFile(String filePath) {
         Logger logger = LoggerFactory.getLogger(Config.class);
@@ -35,10 +38,6 @@ public final class Config {
         }
     }
 
-    private Map<String, String> app;
-    private Map<String, String> consul;
-    private Services service;
-
     public Services getService() {
         return service;
     }
@@ -47,14 +46,6 @@ public final class Config {
         this.service = service;
     }
 
-
-    public class Services {
-        public List<String> tags;
-        public long timeoutInSec;
-        public String type;
-        public String username;
-        public String password;
-    }
     public Map<String, String> getConsul() {
         return consul;
     }
@@ -69,6 +60,14 @@ public final class Config {
 
     public void setApp(Map<String, String> app) {
         this.app = app;
+    }
+
+    public class Services {
+        public List<String> tags;
+        public long timeoutInSec;
+        public String type;
+        public String username;
+        public String password;
     }
 }
 

@@ -3,7 +3,6 @@ package com.criteo.nosql.casspoke.cassandra;
 import com.criteo.nosql.casspoke.config.Config;
 import com.criteo.nosql.casspoke.consul.Consul;
 import com.criteo.nosql.casspoke.consul.Service;
-import com.ecwid.consul.v1.health.model.HealthService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +44,7 @@ public class CassandraRunner implements Runnable {
         EVENT evt;
         long start, stop;
 
-        for(;;){
+        for (; ; ) {
             start = System.currentTimeMillis();
             evt = evts.get(0);
             dispatch_events(evt);
@@ -57,20 +56,9 @@ public class CassandraRunner implements Runnable {
         }
     }
 
-    private enum EVENT {
-        UPDATE_TOPOLOGY(System.currentTimeMillis()),
-        WAIT(System.currentTimeMillis()),
-        POKE(System.currentTimeMillis());
-
-        public long nexTick;
-        EVENT(long nexTick) {
-            this.nexTick = nexTick;
-        }
-    }
-
     private void resheduleEvent(EVENT lastEvt, long start, long stop) {
-        long duration  = stop - start;
-        if(duration >= tickRate) {
+        long duration = stop - start;
+        if (duration >= tickRate) {
             logger.warn("Operation took longer than 1 tick, please increase tick rate if you see this message too often");
         }
 
@@ -94,20 +82,22 @@ public class CassandraRunner implements Runnable {
             case WAIT:
                 try {
                     Thread.sleep(Math.max(evt.nexTick - System.currentTimeMillis(), 0));
-                } catch (Exception e) {logger.error("thread interrupted {}", e);}
+                } catch (Exception e) {
+                    logger.error("thread interrupted {}", e);
+                }
                 break;
 
             case UPDATE_TOPOLOGY:
                 Map<Service, Set<InetSocketAddress>> new_services = consul.getServicesNodesFor(cfg.getService().tags);
 
                 // Consul down ?
-                if(new_services.isEmpty()) {
+                if (new_services.isEmpty()) {
                     logger.info("Consul sent back no services to monitor. is it down ? Are you sure of your tags ?");
                     break;
                 }
 
                 // Check if topology has changed
-                if(Consul.areServicesEquals(services, new_services))
+                if (Consul.areServicesEquals(services, new_services))
                     break;
 
                 logger.info("Topology changed, updating it");
@@ -130,6 +120,18 @@ public class CassandraRunner implements Runnable {
                     m.updateAvailability(monitor.map(CassandraMonitor::collectAvailability).orElse(Collections.EMPTY_MAP));
                 });
                 break;
+        }
+    }
+
+    private enum EVENT {
+        UPDATE_TOPOLOGY(System.currentTimeMillis()),
+        WAIT(System.currentTimeMillis()),
+        POKE(System.currentTimeMillis());
+
+        public long nexTick;
+
+        EVENT(long nexTick) {
+            this.nexTick = nexTick;
         }
     }
 

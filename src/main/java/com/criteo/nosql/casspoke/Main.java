@@ -19,7 +19,7 @@ public class Main {
         Config cfg = cfgO.get();
         HTTPServer server = new HTTPServer(Integer.parseInt(cfg.getApp().getOrDefault("httpServerPort", "8080")));
 
-        for(;;) {
+        for (; ; ) {
             try {
                 new CassandraRunner(cfg).run();
             } catch (Throwable e) {

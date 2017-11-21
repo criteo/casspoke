@@ -7,7 +7,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 public class CassandraMonitor implements AutoCloseable {
     private static Logger logger = LoggerFactory.getLogger(CassandraMonitor.class);
@@ -24,22 +27,8 @@ public class CassandraMonitor implements AutoCloseable {
         this.session = cluster.connect();
     }
 
-    public Map<InetSocketAddress, Boolean> collectAvailability() {
-
-        final Map<InetSocketAddress, Boolean> availabilities = new HashMap<>();
-
-        Session.State state = session.getState();
-        for (Host host : cluster.getMetadata().getAllHosts()) {
-            int connections = state.getOpenConnections(host);
-            availabilities.put(host.getSocketAddress(), connections > 0);
-            logger.debug("%s connections=%d\n", host, connections);
-        }
-
-        return availabilities;
-    }
-
     public static Optional<CassandraMonitor> fromNodes(final Service service, Set<InetSocketAddress> endPoints, long timeoutInMs) {
-        if(endPoints.isEmpty()) {
+        if (endPoints.isEmpty()) {
             return Optional.empty();
         }
 
@@ -47,7 +36,7 @@ public class CassandraMonitor implements AutoCloseable {
             PoolingOptions poolingOptions = new PoolingOptions();
 
             poolingOptions
-                    .setConnectionsPerHost(HostDistance.LOCAL,  1, 2)
+                    .setConnectionsPerHost(HostDistance.LOCAL, 1, 2)
                     .setConnectionsPerHost(HostDistance.REMOTE, 1, 2);
 
             final Cluster cluster = Cluster.builder()
@@ -61,6 +50,20 @@ public class CassandraMonitor implements AutoCloseable {
             return Optional.empty();
         }
 
+    }
+
+    public Map<InetSocketAddress, Boolean> collectAvailability() {
+
+        final Map<InetSocketAddress, Boolean> availabilities = new HashMap<>();
+
+        Session.State state = session.getState();
+        for (Host host : cluster.getMetadata().getAllHosts()) {
+            int connections = state.getOpenConnections(host);
+            availabilities.put(host.getSocketAddress(), connections > 0);
+            logger.debug("%s connections=%d\n", host, connections);
+        }
+
+        return availabilities;
     }
 
     @Override
