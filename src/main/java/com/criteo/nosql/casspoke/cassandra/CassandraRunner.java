@@ -2,13 +2,12 @@ package com.criteo.nosql.casspoke.cassandra;
 
 import com.criteo.nosql.casspoke.config.Config;
 import com.criteo.nosql.casspoke.consul.Consul;
+import com.criteo.nosql.casspoke.consul.Service;
 import com.ecwid.consul.v1.health.model.HealthService;
-import com.ecwid.consul.v1.health.model.HealthService.Node;
-import com.ecwid.consul.v1.health.model.HealthService.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.text.html.Option;
+import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -22,7 +21,7 @@ public class CassandraRunner implements Runnable {
     // consul
     private final Consul consul;
     private final long refreshConsulInMs;
-    private Map<Service, List<Node>> services;
+    private Map<Service, Set<InetSocketAddress>> services;
     private Map<Service, Optional<CassandraMonitor>> monitors;
     private Map<Service, CassandraMetrics> metrics;
 
@@ -99,7 +98,7 @@ public class CassandraRunner implements Runnable {
                 break;
 
             case UPDATE_TOPOLOGY:
-                Map<HealthService.Service, List<HealthService.Node>> new_services = consul.getServicesNodesFor(cfg.getService().tags);
+                Map<Service, Set<InetSocketAddress>> new_services = consul.getServicesNodesFor(cfg.getService().tags);
 
                 // Consul down ?
                 if(new_services.isEmpty()) {
@@ -122,7 +121,7 @@ public class CassandraRunner implements Runnable {
                         .collect(Collectors.toMap(Map.Entry::getKey, e -> CassandraMonitor.fromNodes(e.getKey(), e.getValue(), cfg.getService().timeoutInSec * 1000L)));
 
                 metrics = new HashMap<>(monitors.size());
-                for(Map.Entry<HealthService.Service, Optional<CassandraMonitor>> client: monitors.entrySet()) {
+                for(Map.Entry<Service, Optional<CassandraMonitor>> client: monitors.entrySet()) {
                     metrics.put(client.getKey(), new CassandraMetrics(client.getKey()));
                 }
                 break;

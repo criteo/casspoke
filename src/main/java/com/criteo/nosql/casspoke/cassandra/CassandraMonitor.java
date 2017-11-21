@@ -1,30 +1,26 @@
 package com.criteo.nosql.casspoke.cassandra;
 
+import com.criteo.nosql.casspoke.consul.Service;
 import com.datastax.driver.core.*;
-import com.datastax.driver.core.policies.LoadBalancingPolicy;
 import com.datastax.driver.core.policies.RoundRobinPolicy;
-import com.ecwid.consul.v1.health.model.HealthService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class CassandraMonitor implements AutoCloseable {
     private static Logger logger = LoggerFactory.getLogger(CassandraMonitor.class);
 
-    private final String serviceName;
+    private final Service service;
     private static Cluster cluster = null;
     private final long timeoutInMs;
     private final Session session;
 
-    private CassandraMonitor(String serviceName, Cluster cluster, long timeoutInMs) {
-        this.serviceName = serviceName;
+    private CassandraMonitor(Service service, Cluster cluster, long timeoutInMs) {
+        this.service = service;
         this.cluster = cluster;
         this.timeoutInMs = timeoutInMs;
         this.session = cluster.connect();
@@ -44,7 +40,7 @@ public class CassandraMonitor implements AutoCloseable {
         return availabilities;
     }
 
-    public static Optional<CassandraMonitor> fromNodes(final HealthService.Service service, List<HealthService.Node> endPoints, long timeoutInMs) {
+    public static Optional<CassandraMonitor> fromNodes(final Service service, Set<InetSocketAddress> endPoints, long timeoutInMs) {
         if(endPoints.isEmpty()) {
             return Optional.empty();
         }
@@ -52,7 +48,7 @@ public class CassandraMonitor implements AutoCloseable {
         try {
             // Todo: port dynamic with consul
             List<InetAddress> socks = endPoints.stream()
-                    .map(e -> new InetSocketAddress(e.getAddress(), service.getPort()).getAddress())
+                    .map(InetSocketAddress::getAddress)
                     .collect(Collectors.toList());
 
             PoolingOptions poolingOptions = new PoolingOptions();
@@ -67,7 +63,7 @@ public class CassandraMonitor implements AutoCloseable {
                     .withPoolingOptions(poolingOptions)
                     .withLoadBalancingPolicy(new RoundRobinPolicy())
                     .build();
-            return Optional.of(new CassandraMonitor(service.getService(), cluster, timeoutInMs));
+            return Optional.of(new CassandraMonitor(service, cluster, timeoutInMs));
         } catch (Exception e) {
             logger.error("Cannot create connection to cluster", e);
             return Optional.empty();

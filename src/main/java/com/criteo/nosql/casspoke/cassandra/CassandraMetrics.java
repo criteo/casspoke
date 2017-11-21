@@ -1,7 +1,7 @@
 package com.criteo.nosql.casspoke.cassandra;
 
 import com.criteo.nosql.casspoke.consul.Consul;
-import com.ecwid.consul.v1.health.model.HealthService;
+import com.criteo.nosql.casspoke.consul.Service;
 import io.prometheus.client.Gauge;
 
 import java.net.InetSocketAddress;
@@ -17,8 +17,8 @@ public class CassandraMetrics {
 
     private final String clusterName;
 
-    public CassandraMetrics(final HealthService.Service service) {
-        this.clusterName = Consul.getClusterName(service);
+    public CassandraMetrics(final Service service) {
+        this.clusterName = service.getClusterName();
 
     }
 

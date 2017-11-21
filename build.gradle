@@ -34,8 +34,9 @@ dependencies {
     compile  group: 'com.datastax.cassandra', name: 'cassandra-driver-core', version: '3.3.0'
 
     // Prometheus
-    compile group: 'io.prometheus', name: 'simpleclient', version: '0.0.23'
-    compile group: 'io.prometheus', name: 'simpleclient_common', version: '0.0.23'
+    compile group: 'io.prometheus', name: 'simpleclient', version: '0.1.0'
+    compile group: 'io.prometheus', name: 'simpleclient_common', version: '0.1.0'
+    compile group: 'io.prometheus', name: 'simpleclient_httpserver', version: '0.1.0'
 }
 
 // If you don't use the uber jar
