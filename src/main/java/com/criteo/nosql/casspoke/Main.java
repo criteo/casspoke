@@ -10,22 +10,37 @@ import java.util.Optional;
 
 public class Main {
 
-    static private Logger logger = LoggerFactory.getLogger(Main.class);
+    private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
     public static void main(String[] args) throws Exception {
-        Optional<Config> cfgO = Config.fromFile(args.length > 0 ? args[0] : Config.DEFAULT_PATH);
-        if (!cfgO.isPresent()) return;
+        final Config cfg;
 
-        Config cfg = cfgO.get();
-        HTTPServer server = new HTTPServer(Integer.parseInt(cfg.getApp().getOrDefault("httpServerPort", "8080")));
+        // Get the configuration
+        try {
+            final String cfgPath = args.length > 0 ? args[0] : Config.DEFAULT_PATH;
+            logger.info("Loading yaml config from {}", cfgPath);
+            cfg = Config.fromFile(cfgPath);
+            logger.trace("Loaded configuration: {}", cfg);
+        } catch (Exception e){
+            logger.error("Cannot load config file", e);
+            return;
+        }
+
+        // Start an http server to allow Prometheus scrapping
+        final int httpServerPort = Integer.parseInt(cfg.getApp().getOrDefault("httpServerPort", "8080"));
+        logger.info("Starting an http server on port {}", httpServerPort);
+        final HTTPServer server = new HTTPServer(httpServerPort);
+
+        // TODO Get the runner depending on the configuration
+        final CassandraRunner runner = new CassandraRunner(cfg);
 
         for (; ; ) {
             try {
-                new CassandraRunner(cfg).run();
-            } catch (Throwable e) {
-                logger.error("Uncaught Exception", e);
+                logger.info("Run CassandraRunner");
+                runner.run();
+            } catch (Exception e) {
+                logger.error("An unexpected exception was thrown", e);
             }
         }
     }
-
 }

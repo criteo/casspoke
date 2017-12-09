@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -23,19 +24,9 @@ public final class Config {
     private Map<String, String> consul;
     private Services service;
 
-    public static Optional<Config> fromFile(String filePath) {
-        Logger logger = LoggerFactory.getLogger(Config.class);
-        logger.info("Loading yaml config from {}", filePath);
-
-        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-        try {
-            Config cfg = mapper.readValue(new File(filePath), Config.class);
-            logger.trace(cfg.toString());
-            return Optional.of(cfg);
-        } catch (Exception e) {
-            logger.error("Cannot load config file", e);
-            return Optional.empty();
-        }
+    public static Config fromFile(String filePath) throws IOException {
+        final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        return mapper.readValue(new File(filePath), Config.class);
     }
 
     public Services getService() {
