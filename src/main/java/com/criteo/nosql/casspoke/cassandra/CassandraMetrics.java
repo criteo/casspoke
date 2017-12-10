@@ -6,11 +6,11 @@ import io.prometheus.client.Gauge;
 import java.net.InetSocketAddress;
 import java.util.Map;
 
-public class CassandraMetrics {
-
+public class CassandraMetrics implements AutoCloseable
+{
     static final Gauge UP = Gauge.build()
-            .help("Are the servers up?")
             .name("cassandra_up")
+            .help("Are the servers up?")
             .labelNames("cluster", "instance")
             .create().register();
 
@@ -18,17 +18,16 @@ public class CassandraMetrics {
 
     public CassandraMetrics(final Service service) {
         this.clusterName = service.getClusterName();
-
     }
 
-    public void updateAvailability(Map<InetSocketAddress, Boolean> stats) {
-        stats.forEach((k, v) -> {
-            UP.labels(clusterName, k.getHostName()).set(v ? 1 : 0);
+    public void updateAvailability(Map<InetSocketAddress, Boolean> availabilities) {
+        availabilities.forEach((addr, availability) -> {
+            UP.labels(clusterName, addr.getHostName()).set(availability ? 1 : 0);
         });
     }
 
-
     public void close() {
+        // FIXME we should remove only metrics with the label cluster=clustername
         UP.clear();
     }
 }
