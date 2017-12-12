@@ -3,7 +3,7 @@ app:
   httpServerPort: 8080
 
 consul:
-  host: consul01-am5.central.criteo.prod:8500
+  host: consul01-am5.central.criteo.preprod:8500
 #  host: consul.service.consul
   port: 8500
   timeoutInSec: 10
@@ -16,7 +16,3 @@ service:
   tags:
     - cluster=cstars04
     # - cassandra
-    # - cluster=couchs13
-    # - bucket=Similarities.Persisted
-    # - cluster=mems19
-    # - cluster=mem-shared-s01
