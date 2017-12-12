@@ -35,6 +35,14 @@ public class Consul implements IDiscovery, AutoCloseable {
         this.executor = Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setNameFormat("consul-%d").build());
     }
 
+    public static Consul fromConfig(final Map<String, String> consulCfg) {
+        final String host = consulCfg.get("host");
+        final int port = Integer.parseInt(consulCfg.getOrDefault("port", "8500"));
+        final int timeout = Integer.parseInt(consulCfg.getOrDefault("timeoutInSec", "10"));
+        final String readConsistency = consulCfg.getOrDefault("readConsistency", "STALE");
+        return new Consul(host, port, timeout, readConsistency);
+    }
+
     public static boolean areServicesEquals(final Map<Service, Set<InetSocketAddress>> ori, Map<Service, Set<InetSocketAddress>> neo) {
         //TODO Improve complexity of the function
         if (ori.size() != neo.size()) {

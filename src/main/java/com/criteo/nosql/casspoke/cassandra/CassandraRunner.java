@@ -25,15 +25,14 @@ public class CassandraRunner implements Runnable {
     private Map<Service, Optional<CassandraMonitor>> monitors;
     private Map<Service, CassandraMetrics> metrics;
 
-    public CassandraRunner(Config cfg) {
+    public CassandraRunner(Config cfg, IDiscovery discovery, long refreshDiscoveryInMs) {
         this.cfg = cfg;
-        final Map<String, String> consulCfg = cfg.getConsul();
+
+        this.discovery = discovery;
+        this.refreshDiscoveryInMs = refreshDiscoveryInMs;
 
         this.tickRate = Long.parseLong(cfg.getApp().getOrDefault("tickRateInSec", "20")) * 1000L;
-        this.refreshDiscoveryInMs = Long.parseLong(consulCfg.getOrDefault("refreshEveryMin", "5")) * 60 * 1000L;
 
-        this.discovery = new Consul(consulCfg.get("host"), Integer.parseInt(consulCfg.get("port")),
-                Integer.parseInt(consulCfg.get("timeoutInSec")), consulCfg.get("readConsistency"));
         this.services = Collections.emptyMap();
         this.monitors = Collections.emptyMap();
         this.metrics = Collections.emptyMap();
