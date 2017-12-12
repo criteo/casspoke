@@ -13,7 +13,7 @@ import java.util.Optional;
 import java.util.Set;
 
 public class CassandraMonitor implements AutoCloseable {
-    private static Logger logger = LoggerFactory.getLogger(CassandraMonitor.class);
+    private static final Logger logger = LoggerFactory.getLogger(CassandraMonitor.class);
 
     private final Service service;
     private final Cluster cluster;
@@ -33,9 +33,7 @@ public class CassandraMonitor implements AutoCloseable {
         }
 
         try {
-            PoolingOptions poolingOptions = new PoolingOptions();
-
-            poolingOptions
+            final PoolingOptions poolingOptions = new PoolingOptions()
                     .setConnectionsPerHost(HostDistance.LOCAL, 1, 2)
                     .setConnectionsPerHost(HostDistance.REMOTE, 1, 2);
 
@@ -56,9 +54,9 @@ public class CassandraMonitor implements AutoCloseable {
 
         final Map<InetSocketAddress, Boolean> availabilities = new HashMap<>();
 
-        Session.State state = session.getState();
+        final Session.State state = session.getState();
         for (Host host : cluster.getMetadata().getAllHosts()) {
-            int connections = state.getOpenConnections(host);
+            final int connections = state.getOpenConnections(host);
             availabilities.put(host.getSocketAddress(), connections > 0);
             logger.debug("%s connections=%d\n", host, connections);
         }
