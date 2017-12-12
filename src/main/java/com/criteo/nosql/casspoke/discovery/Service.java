@@ -1,4 +1,4 @@
-package com.criteo.nosql.casspoke.consul;
+package com.criteo.nosql.casspoke.discovery;
 
 public class Service {
     protected final String clusterName;

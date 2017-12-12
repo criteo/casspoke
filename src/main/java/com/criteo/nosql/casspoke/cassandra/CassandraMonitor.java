@@ -1,6 +1,6 @@
 package com.criteo.nosql.casspoke.cassandra;
 
-import com.criteo.nosql.casspoke.consul.Service;
+import com.criteo.nosql.casspoke.discovery.Service;
 import com.datastax.driver.core.*;
 import com.datastax.driver.core.policies.RoundRobinPolicy;
 import org.slf4j.Logger;

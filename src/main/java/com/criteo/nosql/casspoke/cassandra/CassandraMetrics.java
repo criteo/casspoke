@@ -1,6 +1,6 @@
 package com.criteo.nosql.casspoke.cassandra;
 
-import com.criteo.nosql.casspoke.consul.Service;
+import com.criteo.nosql.casspoke.discovery.Service;
 import io.prometheus.client.Gauge;
 
 import java.net.InetSocketAddress;

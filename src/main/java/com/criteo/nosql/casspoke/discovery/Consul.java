@@ -1,4 +1,4 @@
-package com.criteo.nosql.casspoke.consul;
+package com.criteo.nosql.casspoke.discovery;
 
 import com.ecwid.consul.v1.ConsistencyMode;
 import com.ecwid.consul.v1.ConsulClient;
