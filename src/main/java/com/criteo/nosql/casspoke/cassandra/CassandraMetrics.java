@@ -8,7 +8,8 @@ import java.util.Map;
 
 public class CassandraMetrics implements AutoCloseable
 {
-    static final Gauge UP = Gauge.build()
+    // TODO: public for tests. It has to be improved
+    public static final Gauge UP = Gauge.build()
             .name("cassandra_up")
             .help("Are the servers up?")
             .labelNames("cluster", "instance")
