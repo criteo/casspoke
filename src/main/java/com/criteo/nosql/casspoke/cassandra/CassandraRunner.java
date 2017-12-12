@@ -20,7 +20,7 @@ public class CassandraRunner implements Runnable {
     private final long tickRate;
     // consul
     private final IDiscovery discovery;
-    private final long refreshConsulInMs;
+    private final long refreshDiscoveryInMs;
     private Map<Service, Set<InetSocketAddress>> services;
     private Map<Service, Optional<CassandraMonitor>> monitors;
     private Map<Service, CassandraMetrics> metrics;
@@ -30,7 +30,7 @@ public class CassandraRunner implements Runnable {
         final Map<String, String> consulCfg = cfg.getConsul();
 
         this.tickRate = Long.parseLong(cfg.getApp().getOrDefault("tickRateInSec", "20")) * 1000L;
-        this.refreshConsulInMs = Long.parseLong(consulCfg.getOrDefault("refreshEveryMin", "5")) * 60 * 1000L;
+        this.refreshDiscoveryInMs = Long.parseLong(consulCfg.getOrDefault("refreshEveryMin", "5")) * 60 * 1000L;
 
         this.discovery = new Consul(consulCfg.get("host"), Integer.parseInt(consulCfg.get("port")),
                 Integer.parseInt(consulCfg.get("timeoutInSec")), consulCfg.get("readConsistency"));
@@ -69,7 +69,7 @@ public class CassandraRunner implements Runnable {
                 break;
 
             case UPDATE_TOPOLOGY:
-                lastEvt.nexTick = start + refreshConsulInMs;
+                lastEvt.nexTick = start + refreshDiscoveryInMs;
                 break;
 
             case POKE:

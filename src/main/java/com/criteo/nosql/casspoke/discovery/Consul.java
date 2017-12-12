@@ -62,7 +62,7 @@ public class Consul implements IDiscovery, AutoCloseable {
         return getFromTags(service, "cluster=");
     }
 
-    private Map<Service, Set<InetSocketAddress>> getServicesNodesForImpl(List<String> tags) {
+    private Map<Service, Set<InetSocketAddress>> getServicesNodesForImpl(final List<String> tags) {
         ConsulClient client = new ConsulClient(host, port);
         final String[] platformSuffixes = new String[]{"-eu", "-us", "-as"};
 
@@ -106,16 +106,14 @@ public class Consul implements IDiscovery, AutoCloseable {
      * Thus we play safe and wrap calls inside an executor that we can properly timeout, and a new consul client
      * is created each time.
      */
-    public Map<Service, Set<InetSocketAddress>> getServicesNodesFor(List<String> tags) {
+    public Map<Service, Set<InetSocketAddress>> getServicesNodesFor(final List<String> tags) {
         Future<Map<Service, Set<InetSocketAddress>>> fServices = null;
         try {
             fServices = executor.submit(() -> {
                 logger.info("Fetching services for tag {} ", tags);
-                long start = System.currentTimeMillis();
-
-                Map<Service, Set<InetSocketAddress>> services = getServicesNodesForImpl(tags);
-
-                long stop = System.currentTimeMillis();
+                final long start = System.currentTimeMillis();
+                final Map<Service, Set<InetSocketAddress>> services = getServicesNodesForImpl(tags);
+                final long stop = System.currentTimeMillis();
                 logger.info("Fetching services for tag {} took {} ms", tags, stop - start);
                 return services;
             });
