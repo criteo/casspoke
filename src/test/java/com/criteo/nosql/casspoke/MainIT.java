@@ -1,8 +1,9 @@
 package com.criteo.nosql.casspoke;
 
-import com.criteo.nosql.casspoke.cassandra.CassandraRunner;
+import com.criteo.nosql.casspoke.cassandra.CassandraRunnerStats;
 import com.criteo.nosql.casspoke.config.Config;
 import com.criteo.nosql.casspoke.discovery.Consul;
+
 import org.junit.Test;
 
 import java.io.IOException;
@@ -19,7 +20,7 @@ public class MainIT {
         final Consul consulDiscovery = Consul.fromConfig(cfg.getConsul());
         final long refreshDiscoveryInMs= Long.parseLong(cfg.getConsul().getOrDefault("refreshEveryMin", "5")) * 60L * 1000L;
 
-        final CassandraRunner runner = new CassandraRunner(cfg, consulDiscovery, refreshDiscoveryInMs);
+        final Runnable runner = new CassandraRunnerStats(cfg, consulDiscovery, refreshDiscoveryInMs);
         runner.run();
 
         //HashMap<InetSocketAddress, Long> latencies = new HashMap<>();

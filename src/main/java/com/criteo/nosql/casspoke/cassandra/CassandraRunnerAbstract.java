@@ -11,9 +11,8 @@ import java.net.InetSocketAddress;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class CassandraRunner implements Runnable {
-
-    private static final Logger logger = LoggerFactory.getLogger(CassandraRunner.class);
+public abstract class CassandraRunnerAbstract implements Runnable {
+    private static final Logger logger = LoggerFactory.getLogger(CassandraRunnerAbstract.class);
     private final Config cfg;
 
     // app
@@ -21,11 +20,11 @@ public class CassandraRunner implements Runnable {
     // consul
     private final IDiscovery discovery;
     private final long refreshDiscoveryInMs;
-    private Map<Service, Set<InetSocketAddress>> services;
-    private Map<Service, Optional<CassandraMonitor>> monitors;
-    private Map<Service, CassandraMetrics> metrics;
+    protected Map<Service, Set<InetSocketAddress>> services;
+    protected Map<Service, Optional<CassandraMonitor>> monitors;
+    protected Map<Service, CassandraMetrics> metrics;
 
-    public CassandraRunner(Config cfg, IDiscovery discovery, long refreshDiscoveryInMs) {
+    public CassandraRunnerAbstract(Config cfg, IDiscovery discovery, long refreshDiscoveryInMs) {
         this.cfg = cfg;
 
         this.discovery = discovery;
@@ -115,13 +114,12 @@ public class CassandraRunner implements Runnable {
                 break;
 
             case POKE:
-                monitors.forEach((service, monitor) -> {
-                    CassandraMetrics m = metrics.get(service);
-                    m.updateAvailability(monitor.map(CassandraMonitor::collectAvailability).orElse(Collections.EMPTY_MAP));
-                });
+                poke();
                 break;
         }
     }
+
+    abstract public void poke();
 
     private enum EVENT {
         UPDATE_TOPOLOGY(System.currentTimeMillis()),

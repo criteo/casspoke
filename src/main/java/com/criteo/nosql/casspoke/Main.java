@@ -1,6 +1,6 @@
 package com.criteo.nosql.casspoke;
 
-import com.criteo.nosql.casspoke.cassandra.CassandraRunner;
+import com.criteo.nosql.casspoke.cassandra.CassandraRunnerStats;
 import com.criteo.nosql.casspoke.config.Config;
 import com.criteo.nosql.casspoke.discovery.Consul;
 import io.prometheus.client.exporter.HTTPServer;
@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
-import java.util.Optional;
 
 public class Main {
 
@@ -47,7 +46,7 @@ public class Main {
         final HTTPServer server = new HTTPServer(httpServerPort);
 
         // TODO Get the runner depending on the configuration
-        final CassandraRunner runner = new CassandraRunner(cfg, consulDiscovery, refreshDiscoveryInMs);
+        final Runnable runner = new CassandraRunnerStats(cfg, consulDiscovery, refreshDiscoveryInMs);
 
         for (; ; ) {
             try {
