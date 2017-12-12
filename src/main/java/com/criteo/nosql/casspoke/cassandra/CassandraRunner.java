@@ -2,6 +2,7 @@ package com.criteo.nosql.casspoke.cassandra;
 
 import com.criteo.nosql.casspoke.config.Config;
 import com.criteo.nosql.casspoke.discovery.Consul;
+import com.criteo.nosql.casspoke.discovery.IDiscovery;
 import com.criteo.nosql.casspoke.discovery.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +19,7 @@ public class CassandraRunner implements Runnable {
     // app
     private final long tickRate;
     // consul
-    private final Consul consul;
+    private final IDiscovery consul;
     private final long refreshConsulInMs;
     private Map<Service, Set<InetSocketAddress>> services;
     private Map<Service, Optional<CassandraMonitor>> monitors;
@@ -26,7 +27,7 @@ public class CassandraRunner implements Runnable {
 
     public CassandraRunner(Config cfg) {
         this.cfg = cfg;
-        Map<String, String> consulCfg = cfg.getConsul();
+        final Map<String, String> consulCfg = cfg.getConsul();
 
         this.tickRate = Long.parseLong(cfg.getApp().getOrDefault("tickRateInSec", "20")) * 1000L;
         this.refreshConsulInMs = Long.parseLong(consulCfg.getOrDefault("refreshEveryMin", "5")) * 60 * 1000L;

@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit;
 
 import static java.util.stream.Collectors.toList;
 
-public class Consul implements AutoCloseable {
+public class Consul implements IDiscovery, AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(Consul.class);
     private static final String MAINTENANCE_MODE = "_node_maintenance";
 
