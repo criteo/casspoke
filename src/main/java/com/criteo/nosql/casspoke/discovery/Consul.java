@@ -62,10 +62,6 @@ public class Consul implements AutoCloseable {
         return getFromTags(service, "cluster=");
     }
 
-    public static String getBucketName(final HealthService.Service service) {
-        return getFromTags(service, "bucket=");
-    }
-
     private Map<Service, Set<InetSocketAddress>> getServicesNodesForImpl(List<String> tags) {
         ConsulClient client = new ConsulClient(host, port);
         final String[] platformSuffixes = new String[]{"-eu", "-us", "-as"};
@@ -91,7 +87,7 @@ public class Consul implements AutoCloseable {
                     .forEach(hsrv -> {
                         logger.debug("{}", hsrv.getNode());
                         nodes.add(new InetSocketAddress(hsrv.getNode().getAddress(), hsrv.getService().getPort()));
-                        srv[0] = new Service(Consul.getClusterName(hsrv.getService()), Consul.getBucketName(hsrv.getService()));
+                        srv[0] = new Service(Consul.getClusterName(hsrv.getService()));
                     });
             if (nodes.size() > 0) {
                 servicesNodes.put(srv[0], nodes);

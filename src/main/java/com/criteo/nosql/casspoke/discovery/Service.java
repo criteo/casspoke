@@ -1,21 +1,14 @@
 package com.criteo.nosql.casspoke.discovery;
 
 public class Service {
-    protected final String clusterName;
-    protected final String bucketName;
+    private final String clusterName;
 
-
-    public Service(String clusterName, String bucketName) {
+    public Service(String clusterName) {
         this.clusterName = clusterName;
-        this.bucketName = bucketName;
     }
 
     public String getClusterName() {
         return clusterName;
-    }
-
-    public String getBucketName() {
-        return bucketName;
     }
 
     @Override
@@ -25,14 +18,11 @@ public class Service {
 
         Service service = (Service) o;
 
-        if (clusterName != null ? !clusterName.equals(service.clusterName) : service.clusterName != null) return false;
-        return bucketName != null ? bucketName.equals(service.bucketName) : service.bucketName == null;
+        return clusterName != null ? clusterName.equals(service.clusterName) : service.clusterName == null;
     }
 
     @Override
     public int hashCode() {
-        int result = clusterName != null ? clusterName.hashCode() : 0;
-        result = 31 * result + (bucketName != null ? bucketName.hashCode() : 0);
-        return result;
+        return clusterName != null ? clusterName.hashCode() : 0;
     }
 }
