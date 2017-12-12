@@ -13,13 +13,13 @@ import java.util.stream.Collectors;
 
 public class CassandraRunner implements Runnable {
 
-    private final Logger logger = LoggerFactory.getLogger(CassandraRunner.class);
+    private static final Logger logger = LoggerFactory.getLogger(CassandraRunner.class);
     private final Config cfg;
 
     // app
     private final long tickRate;
     // consul
-    private final IDiscovery consul;
+    private final IDiscovery discovery;
     private final long refreshConsulInMs;
     private Map<Service, Set<InetSocketAddress>> services;
     private Map<Service, Optional<CassandraMonitor>> monitors;
@@ -32,7 +32,7 @@ public class CassandraRunner implements Runnable {
         this.tickRate = Long.parseLong(cfg.getApp().getOrDefault("tickRateInSec", "20")) * 1000L;
         this.refreshConsulInMs = Long.parseLong(consulCfg.getOrDefault("refreshEveryMin", "5")) * 60 * 1000L;
 
-        this.consul = new Consul(consulCfg.get("host"), Integer.parseInt(consulCfg.get("port")),
+        this.discovery = new Consul(consulCfg.get("host"), Integer.parseInt(consulCfg.get("port")),
                 Integer.parseInt(consulCfg.get("timeoutInSec")), consulCfg.get("readConsistency"));
         this.services = Collections.emptyMap();
         this.monitors = Collections.emptyMap();
@@ -41,7 +41,7 @@ public class CassandraRunner implements Runnable {
 
     @Override
     public void run() {
-        List<EVENT> evts = Arrays.asList(EVENT.UPDATE_TOPOLOGY, EVENT.WAIT, EVENT.POKE);
+        final List<EVENT> evts = Arrays.asList(EVENT.UPDATE_TOPOLOGY, EVENT.WAIT, EVENT.POKE);
         EVENT evt;
         long start, stop;
 
@@ -58,7 +58,7 @@ public class CassandraRunner implements Runnable {
     }
 
     private void resheduleEvent(EVENT lastEvt, long start, long stop) {
-        long duration = stop - start;
+        final long duration = stop - start;
         if (duration >= tickRate) {
             logger.warn("Operation took longer than 1 tick, please increase tick rate if you see this message too often");
         }
@@ -89,7 +89,7 @@ public class CassandraRunner implements Runnable {
                 break;
 
             case UPDATE_TOPOLOGY:
-                Map<Service, Set<InetSocketAddress>> new_services = consul.getServicesNodesFor(cfg.getService().tags);
+                final Map<Service, Set<InetSocketAddress>> new_services = discovery.getServicesNodesFor(cfg.getService().tags);
 
                 // Consul down ?
                 if (new_services.isEmpty()) {

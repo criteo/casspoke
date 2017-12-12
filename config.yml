@@ -1,5 +1,5 @@
 app:
-  tickRateInSec: 5
+  tickRateInSec: 10
   httpServerPort: 8080
 
 consul:
