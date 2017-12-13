@@ -23,7 +23,8 @@ public class CassandraMetrics implements AutoCloseable
 
     public void updateAvailability(Map<InetSocketAddress, Boolean> availabilities) {
         availabilities.forEach((addr, availability) -> {
-            UP.labels(clusterName, addr.getHostName()).set(availability ? 1 : 0);
+            UP      .labels(clusterName, addr.getHostName())
+                    .set(availability ? 1 : 0);
         });
     }
 

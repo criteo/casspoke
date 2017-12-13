@@ -33,11 +33,11 @@ public class MainIT {
         final long refreshDiscoveryInMs= Long.parseLong(cfg.getConsul().getOrDefault("refreshEveryMin", "5")) * 60L * 1000L;
         final CassandraRunnerStats runner = new CassandraRunnerStats(cfg, consulDiscovery, refreshDiscoveryInMs);
 
-        Assert.assertFalse("'UP' prometheus gauge is initialized", CassandraMetrics.UP.collect().isEmpty());
-        Assert.assertTrue("'UP' prometheus gauge is empty", CassandraMetrics.UP.collect().get(0).samples.isEmpty());
+        Assert.assertFalse("'UP' prometheus gauge should have been initialized", CassandraMetrics.UP.collect().isEmpty());
+        Assert.assertTrue("'UP' prometheus gauge should be empty", CassandraMetrics.UP.collect().get(0).samples.isEmpty());
         runner.updateTopology();
         runner.poke();
-        Assert.assertFalse("'UP' prometheus gauge is not empty after a poke", CassandraMetrics.UP.collect().get(0).samples.isEmpty());
+        Assert.assertFalse("'UP' prometheus gauge should be not empty after a poke", CassandraMetrics.UP.collect().get(0).samples.isEmpty());
         logger.info("UP samples: {}", CassandraMetrics.UP.collect().get(0).samples);
     }
 }
