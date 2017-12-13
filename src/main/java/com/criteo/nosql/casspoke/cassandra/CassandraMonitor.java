@@ -2,7 +2,7 @@ package com.criteo.nosql.casspoke.cassandra;
 
 import com.criteo.nosql.casspoke.discovery.Service;
 import com.datastax.driver.core.*;
-import com.datastax.driver.core.policies.RoundRobinPolicy;
+import com.datastax.driver.core.utils.UUIDs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,12 +14,15 @@ public class CassandraMonitor implements AutoCloseable {
 
     private final Service service;
     private final Cluster cluster;
+    private final WhiteLBPolicy lbPolicy;
     private final int timeoutInMs;
     private final Session session;
+    private final UUID sessionId = UUIDs.random();
 
-    private CassandraMonitor(final Service service, final Cluster cluster, int timeoutInMs) {
+    private CassandraMonitor(final Service service, final Cluster cluster, final WhiteLBPolicy lbPolicy, final int timeoutInMs) {
         this.service = service;
         this.cluster = cluster;
+        this.lbPolicy = lbPolicy;
         this.timeoutInMs = timeoutInMs;
         this.session = cluster.connect();
     }
@@ -34,14 +37,16 @@ public class CassandraMonitor implements AutoCloseable {
                     .setConnectionsPerHost(HostDistance.LOCAL, 1, 2)
                     .setConnectionsPerHost(HostDistance.REMOTE, 1, 2);
 
+            final WhiteLBPolicy lbPolicy = new WhiteLBPolicy();
+
             final Cluster cluster = Cluster.builder()
                     .addContactPointsWithPorts(endPoints)
                     .withPoolingOptions(poolingOptions)
-                    .withLoadBalancingPolicy(new RoundRobinPolicy())
+                    .withLoadBalancingPolicy(lbPolicy)
                     .withSocketOptions(new SocketOptions()
                             .setConnectTimeoutMillis(timeoutInMs))
                     .build();
-            return Optional.of(new CassandraMonitor(service, cluster, timeoutInMs));
+            return Optional.of(new CassandraMonitor(service, cluster, lbPolicy, timeoutInMs));
         } catch (Exception e) {
             logger.error("Cannot create connection to cluster", e);
             return Optional.empty();
@@ -63,14 +68,38 @@ public class CassandraMonitor implements AutoCloseable {
         return availabilities;
     }
 
-    // TODO
     public Map<InetSocketAddress, Long> collectGetLatencies() {
-        return Collections.emptyMap();
+        final Map<InetSocketAddress, Long> getLatencies = new HashMap<>();
+        for (int count = cluster.getMetadata().getAllHosts().size(); count > 0; count--) {
+            final String query = "SELECT * FROM system.local LIMIT 1";
+            final Statement statement = new SimpleStatement(query)
+                    .setConsistencyLevel(ConsistencyLevel.LOCAL_ONE)
+                    .setReadTimeoutMillis((int)timeoutInMs);
+            final long start = System.nanoTime();
+            session.execute(statement);
+            final long stop = System.nanoTime();
+            final Host host = lbPolicy.theLastTargetedHost.get();
+            getLatencies.put(host.getSocketAddress(), stop - start);
+        }
+        return getLatencies;
     }
 
-    // TODO
     public Map<InetSocketAddress, Long> collectSetLatencies() {
-        return Collections.emptyMap();
+        final Map<InetSocketAddress, Long> setLatencies = new HashMap<>();
+
+        for (int count = cluster.getMetadata().getAllHosts().size(); count > 0; count--) {
+            final String query = "INSERT INTO system_traces.events (session_id, event_id, activity, source)" +
+                    "VALUES (?, now(), 'casspoke set latency measure', '127.0.0.1' ) USING TTL 60 ;";
+            final Statement statement = new SimpleStatement(query, sessionId)
+                    .setConsistencyLevel(ConsistencyLevel.LOCAL_ONE);
+
+            final long start = System.nanoTime();
+            session.execute(statement);
+            final long stop = System.nanoTime();
+            final Host host = lbPolicy.theLastTargetedHost.get();
+            setLatencies.put(host.getSocketAddress(), stop - start);
+        }
+        return setLatencies;
     }
 
     @Override
