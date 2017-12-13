@@ -1,5 +1,6 @@
 package com.criteo.nosql.casspoke;
 
+import com.criteo.nosql.casspoke.cassandra.CassandraRunnerLatency;
 import com.criteo.nosql.casspoke.cassandra.CassandraRunnerStats;
 import com.criteo.nosql.casspoke.config.Config;
 import com.criteo.nosql.casspoke.discovery.Consul;
@@ -45,16 +46,32 @@ public class Main {
         logger.info("Starting an http server on port {}", httpServerPort);
         final HTTPServer server = new HTTPServer(httpServerPort);
 
-        // TODO Get the runner depending on the configuration
-        final Runnable runner = new CassandraRunnerStats(cfg, consulDiscovery, refreshDiscoveryInMs);
+        // Get the runner depending on the configuration
+        final String serviceType = cfg.getService().type;
+        logger.info("Load service {}", serviceType);
+        final Runnable runner;
+        switch(serviceType) {
+            case "CASSANDRA":  // for backward compatibility
+            case "CassandraRunnerStats":
+            case "com.criteo.nosql.casspoke.cassandra.CassandraRunnerStats":
+                runner = new CassandraRunnerStats(cfg, consulDiscovery, refreshDiscoveryInMs);
+                break;
+            case "CassandraRunnerLatency":
+            case "com.criteo.nosql.casspoke.cassandra.CassandraRunnerLatency":
+                runner = new CassandraRunnerLatency(cfg, consulDiscovery, refreshDiscoveryInMs);
+                break;
+            default:
+                logger.error("Cannot load the service {}", serviceType);
+                return;
+        }
 
         for (; ; ) {
             try {
-                logger.info("Run CassandraRunner");
+                logger.info("Run {}", serviceType);
                 runner.run();
             } catch (Exception e) {
                 logger.error("An unexpected exception was thrown", e);
-                logger.info("Run CassandraRunner again");
+                logger.info("Run {} again", serviceType);
             }
         }
     }
