@@ -17,17 +17,17 @@ public class CassandraMonitor implements AutoCloseable {
 
     private final Service service;
     private final Cluster cluster;
-    private final long timeoutInMs;
+    private final int timeoutInMs;
     private final Session session;
 
-    private CassandraMonitor(final Service service, final Cluster cluster, long timeoutInMs) {
+    private CassandraMonitor(final Service service, final Cluster cluster, int timeoutInMs) {
         this.service = service;
         this.cluster = cluster;
         this.timeoutInMs = timeoutInMs;
         this.session = cluster.connect();
     }
 
-    public static Optional<CassandraMonitor> fromNodes(final Service service, Set<InetSocketAddress> endPoints, long timeoutInMs) {
+    public static Optional<CassandraMonitor> fromNodes(final Service service, Set<InetSocketAddress> endPoints, int timeoutInMs) {
         if (endPoints.isEmpty()) {
             return Optional.empty();
         }
@@ -41,6 +41,8 @@ public class CassandraMonitor implements AutoCloseable {
                     .addContactPointsWithPorts(endPoints)
                     .withPoolingOptions(poolingOptions)
                     .withLoadBalancingPolicy(new RoundRobinPolicy())
+                    .withSocketOptions(new SocketOptions()
+                            .setConnectTimeoutMillis(timeoutInMs))
                     .build();
             return Optional.of(new CassandraMonitor(service, cluster, timeoutInMs));
         } catch (Exception e) {

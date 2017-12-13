@@ -55,7 +55,7 @@ public final class Config {
 
     public class Services {
         public List<String> tags;
-        public long timeoutInSec;
+        public int timeoutInSec;
         public String type;
         public String username;
         public String password;

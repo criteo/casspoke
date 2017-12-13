@@ -117,7 +117,7 @@ public abstract class CassandraRunnerAbstract implements Runnable {
         // Create new ones
         services = new_services;
         monitors = services.entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, e -> CassandraMonitor.fromNodes(e.getKey(), e.getValue(), cfg.getService().timeoutInSec * 1000L)));
+                .collect(Collectors.toMap(Map.Entry::getKey, e -> CassandraMonitor.fromNodes(e.getKey(), e.getValue(), cfg.getService().timeoutInSec * 1000)));
 
         metrics = new HashMap<>(monitors.size());
         monitors.forEach((Service, v) -> metrics.put(Service, new CassandraMetrics(Service)));
