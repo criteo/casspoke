@@ -1,6 +1,7 @@
 package com.criteo.nosql.casspoke;
 
 import com.criteo.nosql.casspoke.cassandra.CassandraMetrics;
+import com.criteo.nosql.casspoke.cassandra.CassandraRunnerLatency;
 import com.criteo.nosql.casspoke.cassandra.CassandraRunnerStats;
 import com.criteo.nosql.casspoke.config.Config;
 import com.criteo.nosql.casspoke.discovery.Consul;
@@ -37,7 +38,26 @@ public class MainIT {
         Assert.assertTrue("'UP' prometheus gauge should be empty", CassandraMetrics.UP.collect().get(0).samples.isEmpty());
         runner.updateTopology();
         runner.poke();
-        Assert.assertFalse("'UP' prometheus gauge should be not empty after a poke", CassandraMetrics.UP.collect().get(0).samples.isEmpty());
+        Assert.assertFalse("'UP' prometheus gauge should not be empty after a poke", CassandraMetrics.UP.collect().get(0).samples.isEmpty());
         logger.info("UP samples: {}", CassandraMetrics.UP.collect().get(0).samples);
+    }
+
+    // TODO: Discovery and CassandraMetrics should be mocked:
+    // TODO: - to not declare stuff public just for tests
+    // TODO: - to have reliable unit tests that not depend on the environment
+    //@Test
+    public void testLatency() throws IOException, InterruptedException {
+
+        final Config cfg = Config.fromFile(Config.DEFAULT_PATH);
+        final Consul consulDiscovery = Consul.fromConfig(cfg.getConsul());
+        final long refreshDiscoveryInMs= Long.parseLong(cfg.getConsul().getOrDefault("refreshEveryMin", "5")) * 60L * 1000L;
+        final CassandraRunnerLatency runner = new CassandraRunnerLatency(cfg, consulDiscovery, refreshDiscoveryInMs);
+
+        Assert.assertFalse("'LATENCY' prometheus gauge should have been initialized", CassandraMetrics.LATENCY.collect().isEmpty());
+        Assert.assertTrue("'LATENCY' prometheus gauge should be empty", CassandraMetrics.LATENCY.collect().get(0).samples.isEmpty());
+        runner.updateTopology();
+        runner.poke();
+        Assert.assertFalse("'LATENCY' prometheus gauge should not be empty after a poke", CassandraMetrics.LATENCY.collect().get(0).samples.isEmpty());
+        logger.info("LATENCY samples: {}", CassandraMetrics.LATENCY.collect().get(0).samples);
     }
 }

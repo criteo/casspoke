@@ -7,10 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 public class CassandraMonitor implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(CassandraMonitor.class);
@@ -64,6 +61,16 @@ public class CassandraMonitor implements AutoCloseable {
         }
 
         return availabilities;
+    }
+
+    // TODO
+    public Map<InetSocketAddress, Long> collectGetLatencies() {
+        return Collections.emptyMap();
+    }
+
+    // TODO
+    public Map<InetSocketAddress, Long> collectSetLatencies() {
+        return Collections.emptyMap();
     }
 
     @Override
