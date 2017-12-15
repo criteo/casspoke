@@ -49,21 +49,28 @@ public class Main {
 
         // Get the runner depending on the configuration
         final String serviceType = cfg.getService().type;
-        logger.info("Load service {}", serviceType);
+        logger.info("Loading service {}", serviceType);
         final Runnable runner;
-        switch(serviceType) {
-            case "CASSANDRA":  // for backward compatibility
-            case "CassandraRunnerStats":
-            case "com.criteo.nosql.casspoke.cassandra.CassandraRunnerStats":
-                runner = new CassandraRunnerStats(cfg, consulDiscovery, refreshDiscoveryInMs);
-                break;
-            case "CassandraRunnerLatency":
-            case "com.criteo.nosql.casspoke.cassandra.CassandraRunnerLatency":
-                runner = new CassandraRunnerLatency(cfg, consulDiscovery, refreshDiscoveryInMs);
-                break;
-            default:
-                logger.error("Cannot load the service {}", serviceType);
-                return;
+        try {
+            switch (serviceType) {
+                case "CASSANDRA":  // for backward compatibility
+                case "CassandraRunnerStats":
+                    runner = new CassandraRunnerStats(cfg, consulDiscovery, refreshDiscoveryInMs);
+                    break;
+                case "CassandraRunnerLatency":
+                    runner = new CassandraRunnerLatency(cfg, consulDiscovery, refreshDiscoveryInMs);
+                    break;
+                default:
+                    final ClassLoader cl = Thread.currentThread().getContextClassLoader();
+                    final Class<Runnable> clazz = (Class<Runnable>)cl.loadClass(serviceType);
+                    runner = clazz
+                            .getConstructor(Config.class, IDiscovery.class, Long.TYPE)
+                            .newInstance(cfg, consulDiscovery, refreshDiscoveryInMs);
+                    break;
+            }
+        } catch (Exception e){
+            logger.error("Cannot load the service {}", serviceType, e);
+            return;
         }
 
         logger.info("Run {}", serviceType);
