@@ -4,6 +4,7 @@ import com.criteo.nosql.casspoke.cassandra.CassandraRunnerLatency;
 import com.criteo.nosql.casspoke.cassandra.CassandraRunnerStats;
 import com.criteo.nosql.casspoke.config.Config;
 import com.criteo.nosql.casspoke.discovery.Consul;
+import com.criteo.nosql.casspoke.discovery.IDiscovery;
 import io.prometheus.client.exporter.HTTPServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +30,7 @@ public class Main {
         }
 
         // Get Consul discovery
-        final Consul consulDiscovery;
+        final IDiscovery consulDiscovery;
         final long refreshDiscoveryInMs;
         try {
             final Map<String, String> consulCfg = cfg.getConsul();
@@ -65,13 +66,17 @@ public class Main {
                 return;
         }
 
+        logger.info("Run {}", serviceType);
         for (; ; ) {
             try {
-                logger.info("Run {}", serviceType);
                 runner.run();
             } catch (Exception e) {
                 logger.error("An unexpected exception was thrown", e);
                 logger.info("Run {} again", serviceType);
+            } catch (Error e) {
+                logger.error("An unexpected error was thrown, that indicates serious problems. The program will exit", e);
+                consulDiscovery.close();
+                throw e;
             }
         }
     }
