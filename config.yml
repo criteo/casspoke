@@ -11,7 +11,7 @@ consul:
   refreshEveryMin: 1
 
 service:
-  type: CASSANDRA
+  type: CassandraRunnerStats
   timeoutInSec: 60
   tags:
     - cluster=cstars04

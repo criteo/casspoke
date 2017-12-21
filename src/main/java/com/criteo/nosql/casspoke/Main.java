@@ -53,7 +53,6 @@ public class Main {
         final Runnable runner;
         try {
             switch (serviceType) {
-                case "CASSANDRA":  // for backward compatibility
                 case "CassandraRunnerStats":
                     runner = new CassandraRunnerStats(cfg, consulDiscovery, refreshDiscoveryInMs);
                     break;
@@ -61,10 +60,9 @@ public class Main {
                     runner = new CassandraRunnerLatency(cfg, consulDiscovery, refreshDiscoveryInMs);
                     break;
                 default:
-                    final ClassLoader cl = Thread.currentThread().getContextClassLoader();
-                    final Class<Runnable> clazz = (Class<Runnable>)cl.loadClass(serviceType);
-                    runner = clazz
-                            .getConstructor(Config.class, IDiscovery.class, Long.TYPE)
+                    final Class clazz = Class.forName(serviceType);
+                    runner = (Runnable) clazz
+                            .getConstructor(Config.class, IDiscovery.class, long.class)
                             .newInstance(cfg, consulDiscovery, refreshDiscoveryInMs);
                     break;
             }
