@@ -1,14 +1,13 @@
 app:
-  tickRateInSec: 10
+  measurementPeriodInSec: 10
+  refreshDiscoveryPeriodInSec: 60
   httpServerPort: 8080
 
 consul:
-  host: consul01-par.central.criteo.preprod
-#  host: consul.service.consul
+  host: consul.service.consul
   port: 8500
   timeoutInSec: 10
   readConsistency: STALE
-  refreshEveryMin: 1
 
 service:
   type: CassandraRunnerStats

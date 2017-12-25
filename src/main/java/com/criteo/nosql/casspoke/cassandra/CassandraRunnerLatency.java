@@ -7,8 +7,8 @@ import java.util.Collections;
 
 public class CassandraRunnerLatency extends CassandraRunnerAbstract {
 
-    public CassandraRunnerLatency(Config cfg, IDiscovery discovery, long refreshDiscoveryInMs) {
-        super(cfg, discovery, refreshDiscoveryInMs);
+    public CassandraRunnerLatency(Config cfg, IDiscovery discovery) {
+        super(cfg, discovery);
     }
 
     public void poke() {

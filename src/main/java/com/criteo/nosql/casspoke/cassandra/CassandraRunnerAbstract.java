@@ -12,27 +12,24 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public abstract class CassandraRunnerAbstract implements Runnable {
+
     private static final Logger logger = LoggerFactory.getLogger(CassandraRunnerAbstract.class);
 
     private final Config cfg;
-
-    // consul
     private final IDiscovery discovery;
-    private final long refreshDiscoveryInMs;
-    // scheduler
-    private final long tickRate;
-    // app
+    private final long measurementPeriodInMs;
+    private final long refreshDiscoveryPeriodInMs;
+
     protected Map<Service, Set<InetSocketAddress>> services;
     protected Map<Service, Optional<CassandraMonitor>> monitors;
     protected Map<Service, CassandraMetrics> metrics;
 
-    public CassandraRunnerAbstract(Config cfg, IDiscovery discovery, long refreshDiscoveryInMs) {
+    public CassandraRunnerAbstract(Config cfg, IDiscovery discovery) {
         this.cfg = cfg;
 
         this.discovery = discovery;
-        this.refreshDiscoveryInMs = refreshDiscoveryInMs;
-
-        this.tickRate = Long.parseLong(cfg.getApp().getOrDefault("tickRateInSec", "20")) * 1000L;
+        this.measurementPeriodInMs = Long.parseLong(cfg.getApp().getOrDefault("measurementPeriodInSec", "30")) * 1000L;
+        this.refreshDiscoveryPeriodInMs = Long.parseLong(cfg.getApp().getOrDefault("refreshDiscoveryPeriodInSec", "300")) * 1000L;
 
         this.services = Collections.emptyMap();
         this.monitors = Collections.emptyMap();
@@ -57,21 +54,21 @@ public abstract class CassandraRunnerAbstract implements Runnable {
 
     private void rescheduleEvent(EVENT lastEvt, long start, long stop) {
         final long duration = stop - start;
-        if (duration >= tickRate) {
+        if (duration >= measurementPeriodInMs) {
             logger.warn("Operation took longer than 1 tick, please increase tick rate if you see this message too often");
         }
 
-        EVENT.WAIT.nexTick = start + tickRate - 1;
+        EVENT.WAIT.nexTick = start + measurementPeriodInMs - 1;
         switch (lastEvt) {
             case WAIT:
                 break;
 
             case UPDATE_TOPOLOGY:
-                lastEvt.nexTick = start + refreshDiscoveryInMs;
+                lastEvt.nexTick = start + refreshDiscoveryPeriodInMs;
                 break;
 
             case POKE:
-                lastEvt.nexTick = start + tickRate;
+                lastEvt.nexTick = start + measurementPeriodInMs;
                 break;
         }
     }

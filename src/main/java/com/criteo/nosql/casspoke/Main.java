@@ -31,12 +31,10 @@ public class Main {
 
         // Get Consul discovery
         final IDiscovery consulDiscovery;
-        final long refreshDiscoveryInMs;
         try {
             final Map<String, String> consulCfg = cfg.getConsul();
             logger.info("Connecting to consul with config {}", consulCfg);
             consulDiscovery = Consul.fromConfig(consulCfg);
-            refreshDiscoveryInMs = Long.parseLong(consulCfg.getOrDefault("refreshEveryMin", "5")) * 60L * 1000L;
         } catch (Exception e){
             logger.error("Cannot connect to Consul", e);
             return;
@@ -55,16 +53,16 @@ public class Main {
         try {
             switch (serviceType) {
                 case "CassandraRunnerStats":
-                    runner = new CassandraRunnerStats(cfg, consulDiscovery, refreshDiscoveryInMs);
+                    runner = new CassandraRunnerStats(cfg, consulDiscovery);
                     break;
                 case "CassandraRunnerLatency":
-                    runner = new CassandraRunnerLatency(cfg, consulDiscovery, refreshDiscoveryInMs);
+                    runner = new CassandraRunnerLatency(cfg, consulDiscovery);
                     break;
                 default:
                     final Class clazz = Class.forName(serviceType);
                     runner = (Runnable) clazz
-                            .getConstructor(Config.class, IDiscovery.class, long.class)
-                            .newInstance(cfg, consulDiscovery, refreshDiscoveryInMs);
+                            .getConstructor(Config.class, IDiscovery.class)
+                            .newInstance(cfg, consulDiscovery);
                     break;
             }
         } catch (Exception e){

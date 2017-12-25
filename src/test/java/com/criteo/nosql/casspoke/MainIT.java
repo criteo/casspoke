@@ -31,8 +31,7 @@ public class MainIT {
 
         final Config cfg = Config.fromFile(Config.DEFAULT_PATH);
         final Consul consulDiscovery = Consul.fromConfig(cfg.getConsul());
-        final long refreshDiscoveryInMs= Long.parseLong(cfg.getConsul().getOrDefault("refreshEveryMin", "5")) * 60L * 1000L;
-        final CassandraRunnerStats runner = new CassandraRunnerStats(cfg, consulDiscovery, refreshDiscoveryInMs);
+        final CassandraRunnerStats runner = new CassandraRunnerStats(cfg, consulDiscovery);
 
         Assert.assertFalse("'UP' prometheus gauge should have been initialized", CassandraMetrics.UP.collect().isEmpty());
         Assert.assertTrue("'UP' prometheus gauge should be empty", CassandraMetrics.UP.collect().get(0).samples.isEmpty());
@@ -50,8 +49,7 @@ public class MainIT {
 
         final Config cfg = Config.fromFile(Config.DEFAULT_PATH);
         final Consul consulDiscovery = Consul.fromConfig(cfg.getConsul());
-        final long refreshDiscoveryInMs= Long.parseLong(cfg.getConsul().getOrDefault("refreshEveryMin", "5")) * 60L * 1000L;
-        final CassandraRunnerLatency runner = new CassandraRunnerLatency(cfg, consulDiscovery, refreshDiscoveryInMs);
+        final CassandraRunnerLatency runner = new CassandraRunnerLatency(cfg, consulDiscovery);
 
         Assert.assertFalse("'LATENCY' prometheus gauge should have been initialized", CassandraMetrics.LATENCY.collect().isEmpty());
         Assert.assertTrue("'LATENCY' prometheus gauge should be empty", CassandraMetrics.LATENCY.collect().get(0).samples.isEmpty());

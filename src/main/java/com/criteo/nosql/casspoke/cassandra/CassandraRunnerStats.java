@@ -7,8 +7,8 @@ import java.util.Collections;
 
 public class CassandraRunnerStats extends CassandraRunnerAbstract {
 
-    public CassandraRunnerStats(Config cfg, IDiscovery discovery, long refreshDiscoveryInMs) {
-        super(cfg, discovery, refreshDiscoveryInMs);
+    public CassandraRunnerStats(Config cfg, IDiscovery discovery) {
+        super(cfg, discovery);
     }
 
     public void poke() {
