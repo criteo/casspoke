@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public abstract class CassandraRunnerAbstract implements Runnable {
 
@@ -96,31 +95,36 @@ public abstract class CassandraRunnerAbstract implements Runnable {
     public void updateTopology() {
         final Map<Service, Set<InetSocketAddress>> new_services = discovery.getServicesNodesFor(cfg.getService().tags);
 
-        // Consul down ?
+        // Discovery down?
         if (new_services.isEmpty()) {
-            logger.info("Consul sent back no services to monitor. is it down ? Are you sure of your tags ?");
+            logger.info("Discovery sent back no service to monitor. Is it down? Check your configuration.");
             return;
         }
 
-        // Check if topology has changed
+        // Check if topology changed
         if (Consul.areServicesEquals(services, new_services))
             return;
 
         logger.info("Topology changed, updating it");
-        // Clean old monitors
+        // Dispose old monitors and metrics
         monitors.values().forEach(mo -> mo.ifPresent(CassandraMonitor::close));
         metrics.values().forEach(CassandraMetrics::close);
 
         // Create new ones
         services = new_services;
-        monitors = services.entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, e -> CassandraMonitor.fromNodes(e.getKey(), e.getValue(), cfg.getService().timeoutInSec * 1000)));
 
-        metrics = new HashMap<>(monitors.size());
-        monitors.forEach((Service, v) -> metrics.put(Service, new CassandraMetrics(Service)));
+        final int timeoutInMs = cfg.getService().timeoutInSec * 1000;
+        monitors = new HashMap<>(services.size());
+        services.forEach((service, endPoints) -> {
+            monitors.put(service,
+                    CassandraMonitor.fromNodes(service, endPoints, timeoutInMs));
+        });
+
+        metrics = new HashMap<>(services.size());
+        services.forEach((service, v) -> metrics.put(service, new CassandraMetrics(service)));
     }
 
-    abstract public void poke();
+    protected abstract void poke();
 
     private enum EVENT {
         UPDATE_TOPOLOGY(System.currentTimeMillis()),
