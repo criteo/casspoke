@@ -18,6 +18,8 @@ public class CassandraMonitor implements AutoCloseable {
     private final int timeoutInMs;
     private final Session session;
     private final UUID sessionId = UUIDs.random();
+    private final BoundStatement setRequest;
+    private final BoundStatement getRequest;
 
     private CassandraMonitor(final Service service, final Cluster cluster, final WhiteLBPolicy lbPolicy, final int timeoutInMs) {
         this.service = service;
@@ -25,6 +27,14 @@ public class CassandraMonitor implements AutoCloseable {
         this.lbPolicy = lbPolicy;
         this.timeoutInMs = timeoutInMs;
         this.session = cluster.connect();
+        this.setRequest = this.session.prepare("INSERT INTO system_traces.events (session_id, event_id, activity, source)" +
+                                                "VALUES (?, now(), 'casspoke set latency measure', '127.0.0.1' ) USING TTL 60 ;")
+                .setConsistencyLevel(ConsistencyLevel.ONE)
+                .bind(this.sessionId);
+
+        this.getRequest = this.session.prepare("SELECT * FROM system.local LIMIT 1")
+                .setConsistencyLevel(ConsistencyLevel.ONE)
+                .bind();
     }
 
     public static Optional<CassandraMonitor> fromNodes(final Service service, Set<InetSocketAddress> endPoints, int timeoutInMs) {
@@ -71,15 +81,17 @@ public class CassandraMonitor implements AutoCloseable {
     public Map<InetSocketAddress, Long> collectGetLatencies() {
         final Map<InetSocketAddress, Long> getLatencies = new HashMap<>();
         for (int count = cluster.getMetadata().getAllHosts().size(); count > 0; count--) {
-            final String query = "SELECT * FROM system.local LIMIT 1";
-            final Statement statement = new SimpleStatement(query)
-                    .setConsistencyLevel(ConsistencyLevel.LOCAL_ONE)
-                    .setReadTimeoutMillis((int)timeoutInMs);
-            final long start = System.nanoTime();
-            session.execute(statement);
-            final long stop = System.nanoTime();
+
+            long duration = timeoutInMs;
+            try {
+                final long start = System.nanoTime();
+                session.execute(getRequest);
+                duration = System.nanoTime() - start;
+            } catch (Exception e) {
+                logger.error("Error while reading from {} ", lbPolicy.theLastTargetedHost.get(), e);
+            }
             final Host host = lbPolicy.theLastTargetedHost.get();
-            getLatencies.put(host.getSocketAddress(), stop - start);
+            getLatencies.put(host.getSocketAddress(), duration);
         }
         return getLatencies;
     }
@@ -88,16 +100,18 @@ public class CassandraMonitor implements AutoCloseable {
         final Map<InetSocketAddress, Long> setLatencies = new HashMap<>();
 
         for (int count = cluster.getMetadata().getAllHosts().size(); count > 0; count--) {
-            final String query = "INSERT INTO system_traces.events (session_id, event_id, activity, source)" +
-                    "VALUES (?, now(), 'casspoke set latency measure', '127.0.0.1' ) USING TTL 60 ;";
-            final Statement statement = new SimpleStatement(query, sessionId)
-                    .setConsistencyLevel(ConsistencyLevel.LOCAL_ONE);
 
-            final long start = System.nanoTime();
-            session.execute(statement);
-            final long stop = System.nanoTime();
+            long duration = timeoutInMs;
+            try {
+                final long start = System.nanoTime();
+                session.execute(this.setRequest);
+                duration = System.nanoTime() - start;
+            } catch (Exception e) {
+                logger.error("Error while writing to {} ", lbPolicy.theLastTargetedHost.get(), e);
+            }
+
             final Host host = lbPolicy.theLastTargetedHost.get();
-            setLatencies.put(host.getSocketAddress(), stop - start);
+            setLatencies.put(host.getSocketAddress(), duration);
         }
         return setLatencies;
     }
