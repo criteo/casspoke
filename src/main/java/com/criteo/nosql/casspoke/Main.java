@@ -29,12 +29,12 @@ public class Main {
             return;
         }
 
-        // Get Consul discovery
-        final IDiscovery consulDiscovery;
+        // Get the discovery
+        final IDiscovery discovery;
         try {
             final Map<String, String> consulCfg = cfg.getConsul();
             logger.info("Connecting to consul with config {}", consulCfg);
-            consulDiscovery = Consul.fromConfig(consulCfg);
+            discovery = Consul.fromConfig(consulCfg);
         } catch (Exception e){
             logger.error("Cannot connect to Consul", e);
             return;
@@ -53,16 +53,16 @@ public class Main {
         try {
             switch (serviceType) {
                 case "CassandraRunnerStats":
-                    runner = new CassandraRunnerStats(cfg, consulDiscovery);
+                    runner = new CassandraRunnerStats(cfg, discovery);
                     break;
                 case "CassandraRunnerLatency":
-                    runner = new CassandraRunnerLatency(cfg, consulDiscovery);
+                    runner = new CassandraRunnerLatency(cfg, discovery);
                     break;
                 default:
                     final Class clazz = Class.forName(serviceType);
                     runner = (Runnable) clazz
                             .getConstructor(Config.class, IDiscovery.class)
-                            .newInstance(cfg, consulDiscovery);
+                            .newInstance(cfg, discovery);
                     break;
             }
         } catch (Exception e){
@@ -79,7 +79,7 @@ public class Main {
                 logger.info("Run {} again", serviceType);
             } catch (Error e) {
                 logger.error("An unexpected error was thrown, that indicates serious problems. The program will exit", e);
-                consulDiscovery.close();
+                discovery.close();
                 throw e;
             }
         }

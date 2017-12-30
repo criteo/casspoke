@@ -97,15 +97,17 @@ public abstract class CassandraRunnerAbstract implements Runnable {
 
         // Discovery down?
         if (new_services.isEmpty()) {
-            logger.info("Discovery sent back no service to monitor. Is it down? Check your configuration.");
+            logger.warn("Discovery sent back no service to monitor. Is it down? Check your configuration.");
             return;
         }
 
         // Check if topology changed
-        if (Consul.areServicesEquals(services, new_services))
+        if (IDiscovery.areServicesEquals(services, new_services)) {
+            logger.trace("No topology change.");
             return;
+        }
 
-        logger.info("Topology changed, updating it");
+        logger.info("Topology changed. Monitors are updating...");
         // Dispose old monitors and metrics
         monitors.values().forEach(mo -> mo.ifPresent(CassandraMonitor::close));
         metrics.values().forEach(CassandraMetrics::close);

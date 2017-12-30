@@ -43,22 +43,6 @@ public class Consul implements IDiscovery {
         return new Consul(host, port, timeout, readConsistency);
     }
 
-    public static boolean areServicesEquals(final Map<Service, Set<InetSocketAddress>> ori, Map<Service, Set<InetSocketAddress>> neo) {
-        //TODO Improve complexity of the function
-        if (ori.size() != neo.size()) {
-            return false;
-        }
-
-        for (Map.Entry<Service, Set<InetSocketAddress>> e : ori.entrySet()) {
-            Set<InetSocketAddress> addresses = neo.getOrDefault(e.getKey(), Collections.emptySet());
-            if (addresses.size() != e.getValue().size() || !e.getValue().containsAll(addresses)) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
     private static String getFromTags(final HealthService.Service service, final String prefix) {
         return service.getTags().stream()
                 .filter(tag -> tag.startsWith(prefix))
