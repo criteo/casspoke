@@ -35,19 +35,35 @@ public abstract class CassandraRunnerAbstract implements Runnable {
         this.metrics = Collections.emptyMap();
     }
 
+    /**
+     * Run monitors and discovery periodically.
+     * It is an infinite loop. We can stop by interrupting its Thread
+     */
     @Override
     public void run() {
-        final List<EVENT> evts = Arrays.asList(EVENT.UPDATE_TOPOLOGY, EVENT.WAIT, EVENT.POKE);
 
-        for (; ; ) {
-            final long start = System.currentTimeMillis();
-            final EVENT evt = evts.get(0);
-            dispatch_events(evt);
-            final long stop = System.currentTimeMillis();
-            logger.info("{} took {} ms", evt, stop - start);
+        final List<EVENT> evts = Arrays.asList(EVENT.UPDATE_TOPOLOGY, EVENT.POKE);
 
-            rescheduleEvent(evt, start, stop);
-            Collections.sort(evts, Comparator.comparingLong(event -> event.nexTick));
+        try {
+            for (; ; ) {
+                final long start = System.currentTimeMillis();
+                final EVENT evt = evts.get(0);
+                dispatch_events(evt);
+                final long stop = System.currentTimeMillis();
+                logger.info("{} took {} ms", evt, stop - start);
+
+                rescheduleEvent(evt, start, stop);
+                Collections.sort(evts, Comparator.comparingLong(event -> event.nexTick));
+
+                final long sleep_duration = evts.get(0).nexTick - System.currentTimeMillis() - 1;
+                if (sleep_duration > 0) {
+                    Thread.sleep(sleep_duration);
+                    logger.info("WAIT took {} ms", sleep_duration);
+                }
+            }
+        } catch (InterruptedException e) {
+            logger.error("The run was interrupted");
+            Thread.currentThread().interrupt();
         }
     }
 
@@ -57,11 +73,7 @@ public abstract class CassandraRunnerAbstract implements Runnable {
             logger.warn("Operation took longer than 1 tick, please increase tick rate if you see this message too often");
         }
 
-        EVENT.WAIT.nexTick = start + measurementPeriodInMs - 1;
         switch (lastEvt) {
-            case WAIT:
-                break;
-
             case UPDATE_TOPOLOGY:
                 lastEvt.nexTick = start + refreshDiscoveryPeriodInMs;
                 break;
@@ -74,14 +86,6 @@ public abstract class CassandraRunnerAbstract implements Runnable {
 
     private void dispatch_events(EVENT evt) {
         switch (evt) {
-            case WAIT:
-                try {
-                    Thread.sleep(Math.max(evt.nexTick - System.currentTimeMillis(), 0));
-                } catch (Exception e) {
-                    logger.error("thread interrupted {}", e);
-                }
-                break;
-
             case UPDATE_TOPOLOGY:
                 updateTopology();
                 break;
@@ -130,7 +134,6 @@ public abstract class CassandraRunnerAbstract implements Runnable {
 
     private enum EVENT {
         UPDATE_TOPOLOGY(System.currentTimeMillis()),
-        WAIT(System.currentTimeMillis()),
         POKE(System.currentTimeMillis());
 
         public long nexTick;
