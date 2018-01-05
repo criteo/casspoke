@@ -12,19 +12,4 @@ public interface IDiscovery extends AutoCloseable {
 
     default void close() {
     }
-
-    static boolean areServicesEquals(final Map<Service, Set<InetSocketAddress>> ori, Map<Service, Set<InetSocketAddress>> neo) {
-        if (ori.size() != neo.size()) {
-            return false;
-        }
-
-        for (Map.Entry<Service, Set<InetSocketAddress>> e : ori.entrySet()) {
-            Set<InetSocketAddress> addresses = neo.getOrDefault(e.getKey(), Collections.emptySet());
-            if (addresses.size() != e.getValue().size() || !e.getValue().containsAll(addresses)) {
-                return false;
-            }
-        }
-
-        return true;
-    }
 }

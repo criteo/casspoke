@@ -25,4 +25,13 @@ public class Service {
     public int hashCode() {
         return clusterName != null ? clusterName.hashCode() : 0;
     }
+
+    @Override
+    public String toString() {
+        return new StringBuilder()
+                .append("Service {cluster='")
+                .append(clusterName)
+                .append("'}")
+                .toString();
+    }
 }

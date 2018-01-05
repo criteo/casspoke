@@ -20,8 +20,8 @@ public abstract class CassandraRunnerAbstract implements Runnable {
     private final long refreshDiscoveryPeriodInMs;
 
     protected Map<Service, Set<InetSocketAddress>> services;
-    protected Map<Service, Optional<CassandraMonitor>> monitors;
-    protected Map<Service, CassandraMetrics> metrics;
+    protected final Map<Service, Optional<CassandraMonitor>> monitors;
+    protected final Map<Service, CassandraMetrics> metrics;
 
     public CassandraRunnerAbstract(Config cfg, IDiscovery discovery) {
         this.cfg = cfg;
@@ -31,8 +31,8 @@ public abstract class CassandraRunnerAbstract implements Runnable {
         this.refreshDiscoveryPeriodInMs = Long.parseLong(cfg.getApp().getOrDefault("refreshDiscoveryPeriodInSec", "300")) * 1000L;
 
         this.services = Collections.emptyMap();
-        this.monitors = Collections.emptyMap();
-        this.metrics = Collections.emptyMap();
+        this.monitors = new HashMap<>();
+        this.metrics = new HashMap<>();
     }
 
     /**
@@ -105,29 +105,28 @@ public abstract class CassandraRunnerAbstract implements Runnable {
             return;
         }
 
-        // Check if topology changed
-        if (IDiscovery.areServicesEquals(services, new_services)) {
-            logger.trace("No topology change.");
-            return;
-        }
-
-        logger.info("Topology changed. Monitors are updating...");
-        // Dispose old monitors and metrics
-        monitors.values().forEach(mo -> mo.ifPresent(CassandraMonitor::close));
-        metrics.values().forEach(CassandraMetrics::close);
-
-        // Create new ones
-        services = new_services;
-
-        final int timeoutInMs = cfg.getService().timeoutInSec * 1000;
-        monitors = new HashMap<>(services.size());
-        services.forEach((service, endPoints) -> {
-            monitors.put(service,
-                    CassandraMonitor.fromNodes(service, endPoints, timeoutInMs));
+        // Dispose old monitors
+        services.forEach((service, addresses) -> {
+            if (!Objects.equals(addresses, new_services.get(service))) {
+                logger.info("{} has changed, its monitor will be disposed.", service);
+                monitors.remove(service)
+                        .ifPresent(mon -> mon.close());
+                metrics.remove(service)
+                        .close();
+            }
         });
 
-        metrics = new HashMap<>(services.size());
-        services.forEach((service, v) -> metrics.put(service, new CassandraMetrics(service)));
+        // Create new ones
+        final int timeoutInMs = cfg.getService().timeoutInSec * 1000;
+        new_services.forEach((service, new_addresses) -> {
+            if (!Objects.equals(services.get(service), new_addresses)) {
+                logger.info("A new Monitor for {} will be created.", service);
+                monitors.put(service, CassandraMonitor.fromNodes(service, new_addresses, timeoutInMs));
+                metrics.put(service, new CassandraMetrics(service));
+            }
+        });
+
+        services = new_services;
     }
 
     protected abstract void poke();
@@ -142,5 +141,4 @@ public abstract class CassandraRunnerAbstract implements Runnable {
             this.nexTick = nexTick;
         }
     }
-
 }
