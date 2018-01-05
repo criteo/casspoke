@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 import java.net.InetSocketAddress;
 import java.util.*;
 
-public abstract class CassandraRunnerAbstract implements Runnable {
+public abstract class CassandraRunnerAbstract implements AutoCloseable, Runnable {
 
     private static final Logger logger = LoggerFactory.getLogger(CassandraRunnerAbstract.class);
 
@@ -130,6 +130,16 @@ public abstract class CassandraRunnerAbstract implements Runnable {
     }
 
     protected abstract void poke();
+
+    @Override
+    public void close() {
+        monitors.values().stream()
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .forEach(mon -> mon.close());
+        metrics.values()
+                .forEach(metric -> metric.close());
+    }
 
     private enum EVENT {
         UPDATE_TOPOLOGY(System.currentTimeMillis()),

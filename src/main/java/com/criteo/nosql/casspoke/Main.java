@@ -47,41 +47,42 @@ public class Main {
         final HTTPServer server = new HTTPServer(httpServerPort, true);
 
         // Get the runner depending on the configuration
-        final String serviceType = cfg.getService().type;
-        logger.info("Loading service {}", serviceType);
-        final Runnable runner;
+        final String runnerType = cfg.getService().type;
+
+        // If an unexpected exception occurs, we retry
+        for (; ; ) {
+            logger.info("Loading runner {}", runnerType);
+            try(AutoCloseable runner = getRunner(runnerType, cfg, discovery)){
+                try {
+                    logger.info("Run {}", runnerType);
+                    ((Runnable)runner).run();
+                } catch (Exception e) {
+                    logger.error("An unexpected exception was caught. We will rerun {}", runnerType, e);
+                } catch (Error e) {
+                    logger.error("An unexpected error was thrown, that indicates serious problems. The program will exit", e);
+                    discovery.close();
+                    server.stop();
+                    throw e;
+                }
+            }
+        }
+    }
+
+    private static AutoCloseable getRunner(String type, Config cfg, IDiscovery discovery) {
         try {
-            switch (serviceType) {
+            switch (type) {
                 case "CassandraRunnerStats":
-                    runner = new CassandraRunnerStats(cfg, discovery);
-                    break;
+                    return new CassandraRunnerStats(cfg, discovery);
                 case "CassandraRunnerLatency":
-                    runner = new CassandraRunnerLatency(cfg, discovery);
-                    break;
+                    return new CassandraRunnerLatency(cfg, discovery);
                 default:
-                    final Class clazz = Class.forName(serviceType);
-                    runner = (Runnable) clazz
+                    final Class clazz = Class.forName(type);
+                    return (AutoCloseable) clazz
                             .getConstructor(Config.class, IDiscovery.class)
                             .newInstance(cfg, discovery);
-                    break;
             }
-        } catch (Exception e){
-            logger.error("Cannot load the service {}", serviceType, e);
-            return;
-        }
-
-        logger.info("Run {}", serviceType);
-        for (; ; ) {
-            try {
-                runner.run();
-            } catch (Exception e) {
-                logger.error("An unexpected exception was thrown", e);
-                logger.info("Run {} again", serviceType);
-            } catch (Error e) {
-                logger.error("An unexpected error was thrown, that indicates serious problems. The program will exit", e);
-                discovery.close();
-                throw e;
-            }
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Cannot load the service " + type, e);
         }
     }
 }
