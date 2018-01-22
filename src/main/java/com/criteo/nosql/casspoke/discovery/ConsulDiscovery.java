@@ -17,8 +17,12 @@ import java.util.concurrent.TimeUnit;
 
 import static java.util.stream.Collectors.toList;
 
-public class Consul implements IDiscovery {
-    private static final Logger logger = LoggerFactory.getLogger(Consul.class);
+/**
+ * Provide a discovery based on Consul.
+ */
+public class ConsulDiscovery implements IDiscovery {
+    private static final Logger logger = LoggerFactory.getLogger(ConsulDiscovery.class);
+
     private static final String MAINTENANCE_MODE = "_node_maintenance";
 
     private final String host;
@@ -27,7 +31,7 @@ public class Consul implements IDiscovery {
     private final QueryParams params;
     private final ExecutorService executor;
 
-    public Consul(final String host, final int port, final int timeout, final String readConsistency) {
+    public ConsulDiscovery(final String host, final int port, final int timeout, final String readConsistency) {
         this.host = host;
         this.port = port;
         this.timeout = timeout;
@@ -35,12 +39,12 @@ public class Consul implements IDiscovery {
         this.executor = Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setNameFormat("consul-%d").build());
     }
 
-    public static Consul fromConfig(final Map<String, String> consulCfg) {
+    public static ConsulDiscovery fromConfig(final Map<String, String> consulCfg) {
         final String host = consulCfg.get("host");
         final int port = Integer.parseInt(consulCfg.getOrDefault("port", "8500"));
         final int timeout = Integer.parseInt(consulCfg.getOrDefault("timeoutInSec", "10"));
         final String readConsistency = consulCfg.getOrDefault("readConsistency", "STALE");
-        return new Consul(host, port, timeout, readConsistency);
+        return new ConsulDiscovery(host, port, timeout, readConsistency);
     }
 
     private static String getFromTags(final HealthService.Service service, final String prefix) {
@@ -55,20 +59,18 @@ public class Consul implements IDiscovery {
     }
 
     private Map<Service, Set<InetSocketAddress>> getServicesNodesForImpl(final List<String> tags) {
-        ConsulClient client = new ConsulClient(host, port);
-        final String[] platformSuffixes = new String[]{"-eu", "-us", "-as"};
+        final ConsulClient client = new ConsulClient(host, port);
 
-        List<Map.Entry<String, List<String>>> services =
+        final List<Map.Entry<String, List<String>>> services =
                 client.getCatalogServices(params).getValue().entrySet().stream()
-                        .filter(entry -> !Collections.disjoint(entry.getValue(), tags)
-                                && Arrays.stream(platformSuffixes).noneMatch(suffix -> entry.getKey().toLowerCase().endsWith(suffix)))
+                        .filter(entry -> !Collections.disjoint(entry.getValue(), tags))
                         .map(entry -> {
                             logger.info("Found service matching {}", entry.getKey());
                             return entry;
                         })
                         .collect(toList());
 
-        Map<Service, Set<InetSocketAddress>> servicesNodes = new HashMap<>(services.size());
+        final Map<Service, Set<InetSocketAddress>> servicesNodes = new HashMap<>(services.size());
         for (Map.Entry<String, List<String>> service : services) {
             final Set<InetSocketAddress> nodes = new HashSet<>();
             final Service[] srv = new Service[]{null};
@@ -79,7 +81,7 @@ public class Consul implements IDiscovery {
                     .forEach(hsrv -> {
                         logger.debug("{}", hsrv.getNode());
                         nodes.add(new InetSocketAddress(hsrv.getNode().getAddress(), hsrv.getService().getPort()));
-                        srv[0] = new Service(Consul.getClusterName(hsrv.getService()));
+                        srv[0] = new Service(getClusterName(hsrv.getService()));
                     });
             if (nodes.size() > 0) {
                 servicesNodes.put(srv[0], nodes);
@@ -89,15 +91,16 @@ public class Consul implements IDiscovery {
     }
 
     /**
-     * Entry point of the class, that fetch all services with associated nodes matching the given tag
+     * Look in Consul for all services matching one of the tags
      * The function filter out nodes that are in maintenance mode
      *
      * @param tags
-     * @return All this mumbo-jumbo with the executor is done only because the consul client does not expose
-     * in any way a mean to timeout/cancel requests nor to properly shutdown/reset it.
-     * Thus we play safe and wrap calls inside an executor that we can properly timeout, and a new consul client
-     * is created each time.
+     * @return the map nodes by services
      */
+    // All this mumbo-jumbo with the executor is done only because the consul client does not expose
+    // in any way a mean to timeout/cancel requests nor to properly shutdown/reset it.
+    // Thus we play safe and wrap calls inside an executor that we can properly timeout, and a new consul client
+    // is created each time.
     public Map<Service, Set<InetSocketAddress>> getServicesNodesFor(final List<String> tags) {
         Future<Map<Service, Set<InetSocketAddress>>> fServices = null;
         try {

@@ -3,7 +3,7 @@ package com.criteo.nosql.casspoke;
 import com.criteo.nosql.casspoke.cassandra.CassandraRunnerLatency;
 import com.criteo.nosql.casspoke.cassandra.CassandraRunnerStats;
 import com.criteo.nosql.casspoke.config.Config;
-import com.criteo.nosql.casspoke.discovery.Consul;
+import com.criteo.nosql.casspoke.discovery.ConsulDiscovery;
 import com.criteo.nosql.casspoke.discovery.IDiscovery;
 import io.prometheus.client.exporter.HTTPServer;
 import org.slf4j.Logger;
@@ -34,7 +34,7 @@ public class Main {
         try {
             final Map<String, String> consulCfg = cfg.getConsul();
             logger.info("Connecting to consul with config {}", consulCfg);
-            discovery = Consul.fromConfig(consulCfg);
+            discovery = ConsulDiscovery.fromConfig(consulCfg);
         } catch (Exception e){
             logger.error("Cannot connect to Consul", e);
             return;

@@ -4,8 +4,9 @@ import com.criteo.nosql.casspoke.cassandra.CassandraMetrics;
 import com.criteo.nosql.casspoke.cassandra.CassandraRunnerLatency;
 import com.criteo.nosql.casspoke.cassandra.CassandraRunnerStats;
 import com.criteo.nosql.casspoke.config.Config;
-import com.criteo.nosql.casspoke.discovery.Consul;
+import com.criteo.nosql.casspoke.discovery.ConsulDiscovery;
 
+import com.criteo.nosql.casspoke.discovery.IDiscovery;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,8 +31,8 @@ public class MainIT {
     public void testStats() throws IOException, InterruptedException {
 
         final Config cfg = Config.fromFile(Config.DEFAULT_PATH);
-        final Consul consulDiscovery = Consul.fromConfig(cfg.getConsul());
-        final CassandraRunnerStats runner = new CassandraRunnerStats(cfg, consulDiscovery);
+        final IDiscovery discovery = ConsulDiscovery.fromConfig(cfg.getConsul());
+        final CassandraRunnerStats runner = new CassandraRunnerStats(cfg, discovery);
 
         Assert.assertFalse("'UP' prometheus gauge should have been initialized", CassandraMetrics.UP.collect().isEmpty());
         Assert.assertTrue("'UP' prometheus gauge should be empty", CassandraMetrics.UP.collect().get(0).samples.isEmpty());
@@ -48,8 +49,8 @@ public class MainIT {
     public void testLatency() throws IOException, InterruptedException {
 
         final Config cfg = Config.fromFile(Config.DEFAULT_PATH);
-        final Consul consulDiscovery = Consul.fromConfig(cfg.getConsul());
-        final CassandraRunnerLatency runner = new CassandraRunnerLatency(cfg, consulDiscovery);
+        final IDiscovery discovery = ConsulDiscovery.fromConfig(cfg.getConsul());
+        final CassandraRunnerLatency runner = new CassandraRunnerLatency(cfg, discovery);
 
         Assert.assertFalse("'LATENCY' prometheus gauge should have been initialized", CassandraMetrics.LATENCY.collect().isEmpty());
         Assert.assertTrue("'LATENCY' prometheus gauge should be empty", CassandraMetrics.LATENCY.collect().get(0).samples.isEmpty());

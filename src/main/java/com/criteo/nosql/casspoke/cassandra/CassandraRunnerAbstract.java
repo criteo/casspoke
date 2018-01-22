@@ -1,7 +1,6 @@
 package com.criteo.nosql.casspoke.cassandra;
 
 import com.criteo.nosql.casspoke.config.Config;
-import com.criteo.nosql.casspoke.discovery.Consul;
 import com.criteo.nosql.casspoke.discovery.IDiscovery;
 import com.criteo.nosql.casspoke.discovery.Service;
 import org.slf4j.Logger;
