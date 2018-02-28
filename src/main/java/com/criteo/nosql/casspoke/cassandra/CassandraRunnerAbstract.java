@@ -96,7 +96,7 @@ public abstract class CassandraRunnerAbstract implements AutoCloseable, Runnable
     }
 
     public void updateTopology() {
-        final Map<Service, Set<InetSocketAddress>> new_services = discovery.getServicesNodesFor(cfg.getService().tags);
+        final Map<Service, Set<InetSocketAddress>> new_services = discovery.getServicesNodesFor(cfg.getService().getTags());
 
         // Discovery down?
         if (new_services.isEmpty()) {
@@ -116,7 +116,7 @@ public abstract class CassandraRunnerAbstract implements AutoCloseable, Runnable
         });
 
         // Create new ones
-        final int timeoutInMs = cfg.getService().timeoutInSec * 1000;
+        final int timeoutInMs = cfg.getService().getTimeoutInSec() * 1000;
         new_services.forEach((service, new_addresses) -> {
             if (!Objects.equals(services.get(service), new_addresses)) {
                 logger.info("A new Monitor for {} will be created.", service);

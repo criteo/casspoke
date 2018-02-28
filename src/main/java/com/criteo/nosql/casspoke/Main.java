@@ -47,7 +47,7 @@ public class Main {
         final HTTPServer server = new HTTPServer(httpServerPort, true);
 
         // Get the runner depending on the configuration
-        final String runnerType = cfg.getService().type;
+        final String runnerType = cfg.getService().getType();
 
         // If an unexpected exception occurs, we retry
         for (; ; ) {

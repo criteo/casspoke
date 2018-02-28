@@ -20,45 +20,54 @@ import java.util.Optional;
 public final class Config {
 
     public static final String DEFAULT_PATH = "config.yml";
+
     private Map<String, String> app;
     private Map<String, String> consul;
-    private Services service;
+    private Service service;
 
     public static Config fromFile(String filePath) throws IOException {
         final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         return mapper.readValue(new File(filePath), Config.class);
     }
 
-    public Services getService() {
+    public Service getService() {
         return service;
-    }
-
-    public void setService(Services service) {
-        this.service = service;
     }
 
     public Map<String, String> getConsul() {
         return consul;
     }
 
-    public void setConsul(Map<String, String> consul) {
-        this.consul = consul;
-    }
-
     public Map<String, String> getApp() {
         return app;
     }
 
-    public void setApp(Map<String, String> app) {
-        this.app = app;
-    }
+    public static class Service {
+        private String type;
+        private int timeoutInSec;
+        private List<String> tags;
+        private String username;
+        private String password;
 
-    public class Services {
-        public List<String> tags;
-        public int timeoutInSec;
-        public String type;
-        public String username;
-        public String password;
+        public String getType() {
+            return type;
+        }
+
+        public int getTimeoutInSec() {
+            return timeoutInSec;
+        }
+
+        public List<String> getTags() {
+            return tags;
+        }
+
+        public String getUsername() {
+            return username;
+        }
+
+        public String getPassword() {
+            return password;
+        }
     }
 }
 
