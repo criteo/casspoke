@@ -28,10 +28,10 @@ public class MainIT {
     // TODO: - to not declare stuff public just for tests
     // TODO: - to have reliable unit tests that not depend on the environment
     //@Test
-    public void testStats() throws IOException, InterruptedException {
+    public void testStats() throws IOException {
 
         final Config cfg = Config.fromFile(Config.DEFAULT_PATH);
-        final IDiscovery discovery = ConsulDiscovery.fromConfig(cfg.getConsul());
+        final IDiscovery discovery = new ConsulDiscovery(cfg.getDiscovery());
         final CassandraRunnerStats runner = new CassandraRunnerStats(cfg, discovery);
 
         Assert.assertFalse("'UP' prometheus gauge should have been initialized", CassandraMetrics.UP.collect().isEmpty());
@@ -46,10 +46,10 @@ public class MainIT {
     // TODO: - to not declare stuff public just for tests
     // TODO: - to have reliable unit tests that not depend on the environment
     //@Test
-    public void testLatency() throws IOException, InterruptedException {
+    public void testLatency() throws IOException {
 
         final Config cfg = Config.fromFile(Config.DEFAULT_PATH);
-        final IDiscovery discovery = ConsulDiscovery.fromConfig(cfg.getConsul());
+        final IDiscovery discovery = new ConsulDiscovery(cfg.getDiscovery());
         final CassandraRunnerLatency runner = new CassandraRunnerLatency(cfg, discovery);
 
         Assert.assertFalse("'LATENCY' prometheus gauge should have been initialized", CassandraMetrics.LATENCY.collect().isEmpty());

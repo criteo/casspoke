@@ -96,7 +96,7 @@ public abstract class CassandraRunnerAbstract implements AutoCloseable, Runnable
     }
 
     public void updateTopology() {
-        final Map<Service, Set<InetSocketAddress>> new_services = discovery.getServicesNodesFor(cfg.getService().getTags());
+        final Map<Service, Set<InetSocketAddress>> new_services = discovery.getServicesNodesFor();
 
         // Discovery down?
         if (new_services.isEmpty()) {

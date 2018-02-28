@@ -3,15 +3,15 @@ app:
   refreshDiscoveryPeriodInSec: 60
   httpServerPort: 8080
 
-consul:
+discovery:
   host: consul.service.consul
   port: 8500
   timeoutInSec: 10
   readConsistency: STALE
+  tags:
+    - cluster=cstars04
+    # - cassandra
 
 service:
   type: CassandraRunnerStats
   timeoutInSec: 60
-  tags:
-    - cluster=cstars04
-    # - cassandra

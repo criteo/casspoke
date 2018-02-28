@@ -1,5 +1,6 @@
 package com.criteo.nosql.casspoke.discovery;
 
+import com.criteo.nosql.casspoke.config.Config;
 import com.ecwid.consul.v1.ConsistencyMode;
 import com.ecwid.consul.v1.ConsulClient;
 import com.ecwid.consul.v1.QueryParams;
@@ -29,22 +30,16 @@ public class ConsulDiscovery implements IDiscovery {
     private final int port;
     private final int timeout;
     private final QueryParams params;
+    private final List<String> tags;
     private final ExecutorService executor;
 
-    public ConsulDiscovery(final String host, final int port, final int timeout, final String readConsistency) {
-        this.host = host;
-        this.port = port;
-        this.timeout = timeout;
-        this.params = new QueryParams(ConsistencyMode.valueOf(readConsistency));
+    public ConsulDiscovery(final Config.ConsulDiscovery consulCfg) {
+        this.host = consulCfg.getHost();
+        this.port = consulCfg.getPort();
+        this.timeout = consulCfg.getTimeoutInSec();
+        this.params = new QueryParams(ConsistencyMode.valueOf(consulCfg.getReadConsistency()));
+        this.tags = consulCfg.getTags();
         this.executor = Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setNameFormat("consul-%d").build());
-    }
-
-    public static ConsulDiscovery fromConfig(final Map<String, String> consulCfg) {
-        final String host = consulCfg.get("host");
-        final int port = Integer.parseInt(consulCfg.getOrDefault("port", "8500"));
-        final int timeout = Integer.parseInt(consulCfg.getOrDefault("timeoutInSec", "10"));
-        final String readConsistency = consulCfg.getOrDefault("readConsistency", "STALE");
-        return new ConsulDiscovery(host, port, timeout, readConsistency);
     }
 
     private static String getFromTags(final HealthService.Service service, final String prefix) {
@@ -94,14 +89,13 @@ public class ConsulDiscovery implements IDiscovery {
      * Look in Consul for all services matching one of the tags
      * The function filter out nodes that are in maintenance mode
      *
-     * @param tags
      * @return the map nodes by services
      */
     // All this mumbo-jumbo with the executor is done only because the consul client does not expose
     // in any way a mean to timeout/cancel requests nor to properly shutdown/reset it.
     // Thus we play safe and wrap calls inside an executor that we can properly timeout, and a new consul client
     // is created each time.
-    public Map<Service, Set<InetSocketAddress>> getServicesNodesFor(final List<String> tags) {
+    public Map<Service, Set<InetSocketAddress>> getServicesNodesFor() {
         Future<Map<Service, Set<InetSocketAddress>>> fServices = null;
         try {
             fServices = executor.submit(() -> {

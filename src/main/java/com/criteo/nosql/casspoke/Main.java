@@ -9,6 +9,8 @@ import io.prometheus.client.exporter.HTTPServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 public class Main {
@@ -30,15 +32,7 @@ public class Main {
         }
 
         // Get the discovery
-        final IDiscovery discovery;
-        try {
-            final Map<String, String> consulCfg = cfg.getConsul();
-            logger.info("Connecting to consul with config {}", consulCfg);
-            discovery = ConsulDiscovery.fromConfig(consulCfg);
-        } catch (Exception e){
-            logger.error("Cannot connect to Consul", e);
-            return;
-        }
+        final IDiscovery discovery = getDiscovery(cfg);
 
         // Start an http server to allow Prometheus scrapping
         // daemon=true, so if the scheduler is stopped, the JVM does not wait for http server termination
@@ -66,6 +60,16 @@ public class Main {
                 }
             }
         }
+    }
+
+    private static IDiscovery getDiscovery(Config cfg) {
+        final Config.ConsulDiscovery consulCfg = cfg.getDiscovery();
+        if (consulCfg != null) {
+            logger.info("Consul discovery will be used");
+            return new ConsulDiscovery(consulCfg);
+        }
+        logger.error("Bad configuration, no discovery was provided");
+        throw new IllegalArgumentException("Bad configuration, no discovery was provided");
     }
 
     private static AutoCloseable getRunner(String type, Config cfg, IDiscovery discovery) {

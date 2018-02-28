@@ -8,7 +8,7 @@ import java.util.Set;
 
 public interface IDiscovery extends AutoCloseable {
 
-    Map<Service, Set<InetSocketAddress>> getServicesNodesFor(List<String> tags);
+    Map<Service, Set<InetSocketAddress>> getServicesNodesFor();
 
     default void close() {
     }

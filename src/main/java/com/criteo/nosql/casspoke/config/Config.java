@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -22,7 +23,7 @@ public final class Config {
     public static final String DEFAULT_PATH = "config.yml";
 
     private Map<String, String> app;
-    private Map<String, String> consul;
+    private ConsulDiscovery discovery;
     private Service service;
 
     public static Config fromFile(String filePath) throws IOException {
@@ -34,12 +35,40 @@ public final class Config {
         return service;
     }
 
-    public Map<String, String> getConsul() {
-        return consul;
+    public ConsulDiscovery getDiscovery() {
+        return discovery;
     }
 
     public Map<String, String> getApp() {
         return app;
+    }
+
+    public static class ConsulDiscovery {
+        private String host = "localhost";
+        private int port = 8500;
+        private int timeoutInSec = 10;
+        private String readConsistency = "STALE";
+        private List<String> tags = Collections.EMPTY_LIST;
+
+        public String getHost() {
+            return host;
+        }
+
+        public int getPort() {
+            return port;
+        }
+
+        public int getTimeoutInSec() {
+            return timeoutInSec;
+        }
+
+        public String getReadConsistency() {
+            return readConsistency;
+        }
+
+        public List<String> getTags() {
+            return tags;
+        }
     }
 
     public static class Service {
