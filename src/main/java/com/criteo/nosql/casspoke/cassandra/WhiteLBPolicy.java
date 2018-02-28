@@ -2,14 +2,10 @@ package com.criteo.nosql.casspoke.cassandra;
 
 import com.datastax.driver.core.*;
 import com.datastax.driver.core.policies.LoadBalancingPolicy;
-import com.google.common.collect.AbstractIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -27,12 +23,12 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public class WhiteLBPolicy implements LoadBalancingPolicy {
 
+    private static final Logger logger = LoggerFactory.getLogger(WhiteLBPolicy.class);
+
     // TODO: It is clearly NOT thread safe !!!
     public final AtomicReference<Host> theLastTargetedHost = new AtomicReference<>();
 
-    private static final Logger logger = LoggerFactory.getLogger(WhiteLBPolicy.class);
-
-    private final CopyOnWriteArrayList<Host> liveHosts = new CopyOnWriteArrayList<Host>();
+    private final List<Host> liveHosts = new ArrayList<>();
     private final AtomicInteger index = new AtomicInteger();
 
     /**
@@ -43,7 +39,7 @@ public class WhiteLBPolicy implements LoadBalancingPolicy {
     }
 
     @Override
-    public void init(Cluster cluster, Collection<Host> hosts) {
+    synchronized public void init(Cluster cluster, Collection<Host> hosts) {
         this.liveHosts.addAll(hosts);
         this.index.set(0);
     }
@@ -75,48 +71,27 @@ public class WhiteLBPolicy implements LoadBalancingPolicy {
      * try first for querying, which one to use as failover, etc...
      */
     @Override
-    public Iterator<Host> newQueryPlan(String loggedKeyspace, Statement statement) {
+    synchronized public Iterator<Host> newQueryPlan(String loggedKeyspace, Statement statement) {
 
-        // We clone liveHosts because we want a version of the list that
-        // cannot change concurrently of the query plan iterator (this
-        // would be racy). We use clone() as it don't involve a copy of the
-        // underlying array (and thus we rely on liveHosts being a CopyOnWriteArrayList).
-        @SuppressWarnings("unchecked")
-        final List<Host> hosts = (List<Host>) liveHosts.clone();
         final int startIdx = index.getAndIncrement();
-
-        // Overflow protection; not theoretically thread safe but should be good enough
+        // Overflow protection
         if (startIdx > Integer.MAX_VALUE - 10000)
             index.set(0);
 
-        return new AbstractIterator<Host>() {
-
-            private int idx = startIdx;
-            private int remaining = 1;
-
-            @Override
-            protected Host computeNext() {
-                if (remaining <= 0)
-                    return endOfData();
-
-                remaining--;
-                int c = idx++ % hosts.size();
-                if (c < 0)
-                    c += hosts.size();
-                Host h = hosts.get(c);
-                theLastTargetedHost.set(h); // update the last targeted host
-                return h;
-            }
-        };
+        final Host host = liveHosts.get(startIdx % liveHosts.size());
+        theLastTargetedHost.set(host); // TODO: not thread safe !!!
+        return Collections.singleton(host).iterator();
     }
 
     @Override
-    public void onUp(Host host) {
-        liveHosts.addIfAbsent(host);
+    synchronized public void onUp(Host host) {
+        if (!liveHosts.contains(host)) {
+            liveHosts.add(host);
+        }
     }
 
     @Override
-    public void onDown(Host host) {
+    synchronized public void onDown(Host host) {
         liveHosts.remove(host);
     }
 
