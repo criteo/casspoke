@@ -1,17 +1,12 @@
 package com.criteo.nosql.casspoke;
 
-import com.criteo.nosql.casspoke.cassandra.CassandraRunnerLatency;
-import com.criteo.nosql.casspoke.cassandra.CassandraRunnerStats;
+import com.criteo.nosql.casspoke.cassandra.CassandraRunner;
 import com.criteo.nosql.casspoke.config.Config;
 import com.criteo.nosql.casspoke.discovery.ConsulDiscovery;
 import com.criteo.nosql.casspoke.discovery.IDiscovery;
 import io.prometheus.client.exporter.HTTPServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 public class Main {
 
@@ -75,10 +70,8 @@ public class Main {
     private static AutoCloseable getRunner(String type, Config cfg, IDiscovery discovery) {
         try {
             switch (type) {
-                case "CassandraRunnerStats":
-                    return new CassandraRunnerStats(cfg, discovery);
-                case "CassandraRunnerLatency":
-                    return new CassandraRunnerLatency(cfg, discovery);
+                case "CassandraRunner":
+                    return new CassandraRunner(cfg, discovery);
                 default:
                     final Class clazz = Class.forName(type);
                     return (AutoCloseable) clazz

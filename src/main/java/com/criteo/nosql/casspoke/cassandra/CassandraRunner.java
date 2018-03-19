@@ -9,9 +9,9 @@ import org.slf4j.LoggerFactory;
 import java.net.InetSocketAddress;
 import java.util.*;
 
-public abstract class CassandraRunnerAbstract implements AutoCloseable, Runnable {
+public class CassandraRunner implements AutoCloseable, Runnable {
 
-    private static final Logger logger = LoggerFactory.getLogger(CassandraRunnerAbstract.class);
+    private static final Logger logger = LoggerFactory.getLogger(CassandraRunner.class);
 
     private final Config cfg;
     private final IDiscovery discovery;
@@ -22,7 +22,7 @@ public abstract class CassandraRunnerAbstract implements AutoCloseable, Runnable
     protected final Map<Service, Optional<CassandraMonitor>> monitors;
     protected final Map<Service, CassandraMetrics> metrics;
 
-    public CassandraRunnerAbstract(Config cfg, IDiscovery discovery) {
+    public CassandraRunner(Config cfg, IDiscovery discovery) {
         this.cfg = cfg;
 
         this.discovery = discovery;
@@ -128,7 +128,14 @@ public abstract class CassandraRunnerAbstract implements AutoCloseable, Runnable
         services = new_services;
     }
 
-    protected abstract void poke();
+    public void poke() {
+        monitors.forEach((service, monitor) -> {
+            final CassandraMetrics m = metrics.get(service);
+            m.updateGetLatency(monitor.map(CassandraMonitor::collectGetLatencies).orElse(Collections.emptyMap()));
+            m.updateSetLatency(monitor.map(CassandraMonitor::collectSetLatencies).orElse(Collections.emptyMap()));
+            m.updateAvailability(monitor.map(CassandraMonitor::collectAvailability).orElse(Collections.emptyMap()));
+        });
+    }
 
     @Override
     public void close() {

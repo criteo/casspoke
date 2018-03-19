@@ -13,5 +13,5 @@ discovery:
     # - cassandra
 
 service:
-  type: CassandraRunnerStats
+  type: CassandraRunner
   timeoutInSec: 60

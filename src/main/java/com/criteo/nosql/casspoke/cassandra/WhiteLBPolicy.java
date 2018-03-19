@@ -18,8 +18,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * the plan try only one host: if it fails, the query fails immediately.
  * <p/>
  * This policy is not datacenter aware and will include every known
- * Cassandra host in its round robin algorithm. It is intended for
- * CassandraRunnerStats
+ * Cassandra host in its round robin algorithm.
  */
 public class WhiteLBPolicy implements LoadBalancingPolicy {
 
