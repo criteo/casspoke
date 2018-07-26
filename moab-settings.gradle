@@ -1,6 +1,4 @@
-if (!file('build.gradle').text.contains('com.criteo.moab-module')) {
-    // This build.gradle file was not translated to JMOAB2. We don't include it
-    project(':probes:casspoke').buildFileName = 'untranslated.gradle'
+if (settings.moabWalker == settings.moabMixedWalker) {
     moabMavenWalker.includeAll(this)
 }
 
