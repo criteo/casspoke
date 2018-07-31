@@ -1,4 +1,0 @@
-if (settings.moabWalker == settings.moabMixedWalker) {
-    moabMavenWalker.includeAll(this)
-}
-
