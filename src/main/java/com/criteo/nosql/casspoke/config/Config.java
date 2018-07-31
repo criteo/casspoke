@@ -23,7 +23,7 @@ public final class Config {
     public static final String DEFAULT_PATH = "config.yml";
 
     private Map<String, String> app;
-    private ConsulDiscovery discovery;
+    private Discovery discovery;
     private Service service;
 
     public static Config fromFile(String filePath) throws IOException {
@@ -35,7 +35,7 @@ public final class Config {
         return service;
     }
 
-    public ConsulDiscovery getDiscovery() {
+    public Discovery getDiscovery() {
         return discovery;
     }
 
@@ -70,6 +70,33 @@ public final class Config {
             return tags;
         }
     }
+
+    public static class StaticDiscovery {
+        private String clustername;
+        private String host;
+
+        public String getClustername() {
+            return clustername;
+        }
+
+        public String getHost() {
+            return host;
+        }
+    }
+
+    public static class Discovery {
+        private ConsulDiscovery consul;
+        private StaticDiscovery staticDns;
+
+        public ConsulDiscovery getConsul() {
+            return consul;
+        }
+
+        public StaticDiscovery getStaticDns() {
+            return staticDns;
+        }
+    }
+
 
     public static class Service {
         private String type;

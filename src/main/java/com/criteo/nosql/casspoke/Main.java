@@ -3,6 +3,7 @@ package com.criteo.nosql.casspoke;
 import com.criteo.nosql.casspoke.cassandra.CassandraRunner;
 import com.criteo.nosql.casspoke.config.Config;
 import com.criteo.nosql.casspoke.discovery.ConsulDiscovery;
+import com.criteo.nosql.casspoke.discovery.DnsDiscovery;
 import com.criteo.nosql.casspoke.discovery.IDiscovery;
 import io.prometheus.client.exporter.HTTPServer;
 import org.slf4j.Logger;
@@ -58,10 +59,17 @@ public class Main {
     }
 
     private static IDiscovery getDiscovery(Config cfg) {
-        final Config.ConsulDiscovery consulCfg = cfg.getDiscovery();
+        final Config.ConsulDiscovery consulCfg = cfg.getDiscovery().getConsul();
+        final Config.StaticDiscovery dnsCfg = cfg.getDiscovery().getStaticDns();
+
         if (consulCfg != null) {
             logger.info("Consul discovery will be used");
             return new ConsulDiscovery(consulCfg);
+        }
+
+        if (dnsCfg != null) {
+            logger.info("Static Couchbase discovery will be used");
+            return new DnsDiscovery(dnsCfg.getHost(), dnsCfg.getClustername());
         }
         logger.error("Bad configuration, no discovery was provided");
         throw new IllegalArgumentException("Bad configuration, no discovery was provided");

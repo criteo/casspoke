@@ -4,13 +4,17 @@ app:
   httpServerPort: 8080
 
 discovery:
-  host: consul.service.consul
-  port: 8500
-  timeoutInSec: 10
-  readConsistency: STALE
-  tags:
-    - cluster=cstars04
-    # - cassandra
+  #staticDns:
+  #  clustername: cstars04
+  #  host: 10.50.4.55:9042
+  consul:
+    host: consul.service.consul
+    port: 8500
+    timeoutInSec: 10
+    readConsistency: STALE
+    tags:
+      #- cluster=cstars04
+      - cassandra
 
 service:
   type: CassandraRunner
