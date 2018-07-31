@@ -30,7 +30,7 @@ public class MainIT {
     public void testStats() throws IOException {
 
         final Config cfg = Config.fromFile(Config.DEFAULT_PATH);
-        final IDiscovery discovery = new ConsulDiscovery(cfg.getDiscovery());
+        final IDiscovery discovery = new ConsulDiscovery(cfg.getDiscovery().getConsul());
         final CassandraRunner runner = new CassandraRunner(cfg, discovery);
 
         Assert.assertFalse("'UP' prometheus gauge should have been initialized", CassandraMetrics.UP.collect().isEmpty());
@@ -48,7 +48,7 @@ public class MainIT {
     public void testLatency() throws IOException {
 
         final Config cfg = Config.fromFile(Config.DEFAULT_PATH);
-        final IDiscovery discovery = new ConsulDiscovery(cfg.getDiscovery());
+        final IDiscovery discovery = new ConsulDiscovery(cfg.getDiscovery().getConsul());
         final CassandraRunner runner = new CassandraRunner(cfg, discovery);
 
         Assert.assertFalse("'LATENCY' prometheus gauge should have been initialized", CassandraMetrics.LATENCY.collect().isEmpty());
