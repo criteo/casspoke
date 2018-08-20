@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 public class CassandraMonitor implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(CassandraMonitor.class);
@@ -45,7 +46,9 @@ public class CassandraMonitor implements AutoCloseable {
         try {
             final PoolingOptions poolingOptions = new PoolingOptions()
                     .setConnectionsPerHost(HostDistance.LOCAL, 1, 2)
-                    .setConnectionsPerHost(HostDistance.REMOTE, 1, 2);
+                    .setConnectionsPerHost(HostDistance.REMOTE, 1, 2)
+                    .setHeartbeatIntervalSeconds(20)
+                    .setPoolTimeoutMillis((int) TimeUnit.SECONDS.toMillis(30));
 
             final WhiteLBPolicy lbPolicy = new WhiteLBPolicy();
 
@@ -54,7 +57,13 @@ public class CassandraMonitor implements AutoCloseable {
                     .withPoolingOptions(poolingOptions)
                     .withLoadBalancingPolicy(lbPolicy)
                     .withSocketOptions(new SocketOptions()
-                            .setConnectTimeoutMillis(timeoutInMs))
+                            .setConnectTimeoutMillis((int) TimeUnit.SECONDS.toMillis(30))
+                            .setTcpNoDelay(true)
+                            .setKeepAlive(true)
+                            .setReadTimeoutMillis(timeoutInMs)
+                            .setReuseAddress(true)
+                            .setSoLinger(timeoutInMs)
+                    )
                     .build();
             return Optional.of(new CassandraMonitor(service, cluster, lbPolicy, timeoutInMs));
         } catch (Exception e) {
