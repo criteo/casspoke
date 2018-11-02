@@ -13,7 +13,7 @@ discovery:
     - clustername: cstars01
       host: cstars01-seed1.fqdn:9042,cstars01-seed2.fqdn:9042
     - clustername: cstars02
-      host: cstars01-seed1.fqdn:9042,cstars01-seed2.fqdn:9042
+      host: cstars02-seed1.fqdn:9042,cstars02-seed2.fqdn:9042
 #  consul:
 #    host: consul.service.consul
 #    port: 8500
