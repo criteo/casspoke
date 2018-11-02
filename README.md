@@ -29,8 +29,8 @@ app:
   measurementPeriodInSec: 10
   # Operations timeout
   timeoutInSec: 60
-  # Discovery of the cluster should be re-done every x seconds (useful if you use consul or teardown often clusters)
-  refreshDiscoveryPeriodInSec: 60
+  # Discovery of the cluster should be re-done every x seconds (useful if you use consul)
+  refreshDiscoveryPeriodInSec: 600
   # Prometheus http server port endpoint
   httpServerPort: 8080
 
