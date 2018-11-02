@@ -9,7 +9,7 @@
 Casspoke is a blackbox probe measuring [Apache Cassandra®](http://cassandra.apache.org/) availibility and latency. It exposes metrics throught an prometheus friendly endpoint.
 The probe will connect to cassandra and:
   - Listen for topology change (like a node changing state from UN to DN) and expose the availibility throught metric
-  - Send periodically to each node write and read request to the `system_traces.events` table in order to measure latency to this node
+  - Send periodically to each node write and read requests to the `system_traces.events` table in order to measure latency to this node
   
 ## How to use
 
