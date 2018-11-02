@@ -7,15 +7,20 @@
 ## Description
 
 Casspoke is a blackbox probe measuring [Apache Cassandra®](http://cassandra.apache.org/) availibility and latency and exposing metrics throught an prometheus friendly endpoint.
-
-
+The probe will connect to cassandra and:
+  - listen for topology change (like a node changing state from UN to DN) and expose the availibility throught metric
+  - Send periodically to each node write and read request to the system_traces.events table in order to measure latency to this node
+  
 ## How to use
 
 To start the application
 > java -jar casspoke.jar config.yml
 
+The prometheus endpoint is available at http://localhost:{httpServerPort} (8080 by default)
+
 For the configuration take a loot at 
 https://github.com/criteo/casspoke/blob/master/config.yml
+
 There are 2 main sections: {app, discovery}
 
 ```yaml
