@@ -14,7 +14,10 @@ Casspoke is a blackbox probe measuring [Apache Cassandra®](http://cassandra.apa
 To start the application
 > java -jar casspoke.jar config.yml
 
+For the configuration take a loot at 
+https://github.com/criteo/casspoke/blob/master/config.yml
 
+There are 2 main sections: {app, discovery}
 
 
 
