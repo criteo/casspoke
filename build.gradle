@@ -10,7 +10,6 @@ mainClassName = 'com.criteo.nosql.casspoke.Main'
 
 repositories {
     mavenCentral()
-    maven { url "http://nexus.criteo.prod/content/repositories/criteo.thirdparty" }
 }
 
 
