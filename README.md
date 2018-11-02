@@ -16,6 +16,8 @@ To start the application
 
 For the configuration take a loot at 
 https://github.com/criteo/casspoke/blob/master/config.yml
+There are 2 main sections: {app, discovery}
+
 ```yaml
 app:
   # A measurement should be taken every x seconds
@@ -44,8 +46,6 @@ service:
   type: CassandraRunner
   timeoutInSec: 60
 ```
-
-There are 2 main sections: {app, discovery}
 
 
 
