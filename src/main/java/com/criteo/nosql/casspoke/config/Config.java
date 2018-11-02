@@ -2,15 +2,12 @@ package com.criteo.nosql.casspoke.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * Configuration class that are use by the app
@@ -71,10 +68,9 @@ public final class Config {
         }
     }
 
-    public static class StaticDiscovery {
+    public static class DnsEntry {
         private String clustername;
         private String host;
-
         public String getClustername() {
             return clustername;
         }
@@ -86,15 +82,13 @@ public final class Config {
 
     public static class Discovery {
         private ConsulDiscovery consul;
-        private StaticDiscovery staticDns;
+        private List<DnsEntry> dns;
 
         public ConsulDiscovery getConsul() {
             return consul;
         }
 
-        public StaticDiscovery getStaticDns() {
-            return staticDns;
-        }
+        public List<DnsEntry> getDns() { return dns; }
     }
 
 

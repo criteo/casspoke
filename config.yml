@@ -7,18 +7,19 @@ app:
   httpServerPort: 8080
 
 discovery:
-  staticDns:
-    clustername: cstars04
-    host: cassandra-seed1.fqdn:9042,cassandra-seed2.fqdn:9042
-    
-#  If you want to use consul to do the discovery    
+  dns:
+    - clustername: cstars01
+      host: 10.50.4.55:9042
+    - clustername: cstars02
+      host: 10.50.4.55:9042
 #  consul:
 #    host: consul.service.consul
 #    port: 8500
 #    timeoutInSec: 10
 #    readConsistency: STALE
 #    tags:
-#      - cassandra
+#      - cluster=cstars01
+#      #- cassandra
 
 # Not usefull for now
 service:
