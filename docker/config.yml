@@ -1,20 +1,22 @@
 app:
+  # A measurement should be taken every x seconds
   measurementPeriodInSec: 10
-  refreshDiscoveryPeriodInSec: 60
+  # Operations timeout
+  timeoutInSec: 60
+  # Discovery of the cluster should be re-done every x seconds (useful if you use consul)
+  refreshDiscoveryPeriodInSec: 600
+  # Prometheus http server port endpoint
   httpServerPort: 8080
 
 discovery:
-  #staticDns:
-  #  clustername: cstars04
-  #  host: 10.50.4.55:9042
-  consul:
-    host: consul.service.consul
-    port: 8500
-    timeoutInSec: 10
-    readConsistency: STALE
-    tags:
-      - cassandra
-
-service:
-  type: CassandraRunner
-  timeoutInSec: 60
+  dns:
+    - clustername: cstars01
+      host: 127.0.0.1:9042
+#  consul:
+#    host: consul.service.consul
+#    port: 8500
+#    timeoutInSec: 10
+#    readConsistency: STALE
+#    tags:
+#      - cluster=cstars01
+#      #- cassandra
