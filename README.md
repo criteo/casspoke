@@ -37,9 +37,9 @@ app:
 discovery:
   dns:
     - clustername: cstars01
-      host: 10.50.4.55:9042
+      host: cstars01-seed1.fqdn:9042,cstars01-seed2.fqdn:9042
     - clustername: cstars02
-      host: 10.50.4.55:9042
+      host: cstars02-seed1.fqdn:9042,cstars02-seed2.fqdn:9042
 #  consul:
 #    host: consul.service.consul
 #    port: 8500
@@ -48,6 +48,7 @@ discovery:
 #    tags:
 #      - cluster=cstars01
 #      #- cassandra
+
 ```
 
 
