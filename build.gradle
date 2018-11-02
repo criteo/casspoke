@@ -1,5 +1,5 @@
 group 'com.criteo.nosql'
-version '1.0'
+version '1.2'
 
 apply plugin: 'java'
 apply plugin: 'com.github.johnrengelman.shadow'
@@ -23,6 +23,7 @@ dependencies {
     // Logging
     compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.25'
     compile group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.25'
+    compile group: 'commons-logging', name: 'commons-logging', version: '1.2'
 
     // YAML parser
     compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version:'2.9.3'
@@ -56,3 +57,11 @@ buildscript {
         classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.1'
     }
 }
+
+task nativeImage(type: JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    main = project.mainClassName
+    executable = '/usr/lib/jvm/java-8-graal/bin/native-image'
+    jvmArgs '--static', '-H:+ReportUnsupportedElementsAtRuntime', '-H:ReflectionConfigurationFiles=reflect.json'
+}
+
