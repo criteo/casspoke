@@ -21,15 +21,10 @@ public final class Config {
 
     private Map<String, String> app;
     private Discovery discovery;
-    private Service service;
 
     public static Config fromFile(String filePath) throws IOException {
         final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         return mapper.readValue(new File(filePath), Config.class);
-    }
-
-    public Service getService() {
-        return service;
     }
 
     public Discovery getDiscovery() {
@@ -89,35 +84,6 @@ public final class Config {
         }
 
         public List<DnsEntry> getDns() { return dns; }
-    }
-
-
-    public static class Service {
-        private String type;
-        private int timeoutInSec;
-        private List<String> tags;
-        private String username;
-        private String password;
-
-        public String getType() {
-            return type;
-        }
-
-        public int getTimeoutInSec() {
-            return timeoutInSec;
-        }
-
-        public List<String> getTags() {
-            return tags;
-        }
-
-        public String getUsername() {
-            return username;
-        }
-
-        public String getPassword() {
-            return password;
-        }
     }
 }
 

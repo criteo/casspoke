@@ -116,7 +116,7 @@ public class CassandraRunner implements AutoCloseable, Runnable {
         });
 
         // Create new ones
-        final int timeoutInMs = cfg.getService().getTimeoutInSec() * 1000;
+        final int timeoutInMs = Integer.parseInt(cfg.getApp().getOrDefault("timeoutInSec", "60")) * 1000;
         new_services.forEach((service, new_addresses) -> {
             if (!Objects.equals(services.get(service), new_addresses)) {
                 logger.info("A new Monitor for {} will be created.", service);

@@ -1,6 +1,8 @@
 app:
   # A measurement should be taken every x seconds
   measurementPeriodInSec: 10
+  # Operations timeout
+  timeoutInSec: 60
   # Discovery of the cluster should be re-done every x seconds (usefull if you use consul or teardown often clusters)
   refreshDiscoveryPeriodInSec: 60
   # Prometheus http server port endpoint
@@ -20,8 +22,3 @@ discovery:
 #    tags:
 #      - cluster=cstars01
 #      #- cassandra
-
-# Not usefull for now
-service:
-  type: CassandraRunner
-  timeoutInSec: 60
