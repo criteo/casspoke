@@ -58,10 +58,3 @@ buildscript {
     }
 }
 
-task nativeImage(type: JavaExec) {
-    classpath = sourceSets.main.runtimeClasspath
-    main = project.mainClassName
-    executable = '/usr/lib/jvm/java-8-graal/bin/native-image'
-    jvmArgs '--static', '-H:+ReportUnsupportedElementsAtRuntime', '-H:ReflectionConfigurationFiles=reflect.json'
-}
-
