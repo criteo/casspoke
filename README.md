@@ -51,6 +51,13 @@ discovery:
 
 ```
 
+## How to build
+At the root of the project, just do a
+> gradle build
+you will find the jar in build/libs directory
+
+## Docker
+> docker run --net=host -v config.yml:/opt/casspoke/config.yml criteord/casspoke:1.2 
 
 
 
