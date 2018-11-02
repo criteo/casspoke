@@ -58,7 +58,7 @@ At the root of the project, just do a
 you will find the jar in build/libs directory
 
 ## Docker
-> docker run --net=host -v $(pwd)/config.yml:/opt/casspoke/config.yml criteord/casspoke:1.2 
+> docker run --rm --net=host -v $(pwd)/config.yml:/opt/casspoke/config.yml criteord/casspoke:1.2 
 
 
 
