@@ -1,6 +1,9 @@
 package com.criteo.nosql.casspoke.cassandra;
 
-import com.datastax.driver.core.*;
+import com.datastax.driver.core.Cluster;
+import com.datastax.driver.core.Host;
+import com.datastax.driver.core.HostDistance;
+import com.datastax.driver.core.Statement;
 import com.datastax.driver.core.policies.LoadBalancingPolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 
 
 /**
@@ -29,12 +33,14 @@ public class WhiteLBPolicy implements LoadBalancingPolicy {
 
     private final List<Host> liveHosts = new ArrayList<>();
     private final AtomicInteger index = new AtomicInteger();
+    private final Consumer<Host> onHostRemoved;
 
     /**
      * Creates a load balancing policy that picks host to query in a round robin
      * fashion (on all the hosts of the Cassandra cluster).
      */
-    public WhiteLBPolicy() {
+    public WhiteLBPolicy(Consumer<Host> onHostRemoved) {
+        this.onHostRemoved = onHostRemoved;
     }
 
     @Override
@@ -102,6 +108,7 @@ public class WhiteLBPolicy implements LoadBalancingPolicy {
     @Override
     public void onRemove(Host host) {
         onDown(host);
+        onHostRemoved.accept(host);
     }
 
     @Override

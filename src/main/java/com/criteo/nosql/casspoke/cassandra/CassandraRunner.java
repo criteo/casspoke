@@ -3,6 +3,7 @@ package com.criteo.nosql.casspoke.cassandra;
 import com.criteo.nosql.casspoke.config.Config;
 import com.criteo.nosql.casspoke.discovery.IDiscovery;
 import com.criteo.nosql.casspoke.discovery.Service;
+import com.datastax.driver.core.Host;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -120,8 +121,9 @@ public class CassandraRunner implements AutoCloseable, Runnable {
         new_services.forEach((service, new_addresses) -> {
             if (!Objects.equals(services.get(service), new_addresses)) {
                 logger.info("A new Monitor for {} will be created.", service);
-                monitors.put(service, CassandraMonitor.fromNodes(service, new_addresses, timeoutInMs));
-                metrics.put(service, new CassandraMetrics(service));
+                CassandraMetrics cassMetrics = new CassandraMetrics(service);
+                monitors.put(service, CassandraMonitor.fromNodes(service, new_addresses, timeoutInMs, (Host host) -> cassMetrics.clear()));
+                metrics.put(service, cassMetrics);
             }
         });
 

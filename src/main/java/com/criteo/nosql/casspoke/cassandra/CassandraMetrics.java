@@ -59,6 +59,10 @@ public class CassandraMetrics implements AutoCloseable
 
     public void close() {
         // FIXME we should remove only metrics with the label cluster=clustername
+        clear();
+    }
+
+    public static void clear() {
         UP.clear();
         LATENCY.clear();
     }
