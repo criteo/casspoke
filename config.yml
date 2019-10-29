@@ -7,6 +7,10 @@ app:
   refreshDiscoveryPeriodInSec: 600
   # Prometheus http server port endpoint
   httpServerPort: 8080
+  # Optional: username used to auth to cassandra
+  # username: user
+  # Optional: password used to auth to cassandra
+  # password: password
 
 discovery:
   dns:

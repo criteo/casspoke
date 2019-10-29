@@ -3,7 +3,9 @@ package com.criteo.nosql.casspoke.cassandra;
 import com.criteo.nosql.casspoke.config.Config;
 import com.criteo.nosql.casspoke.discovery.IDiscovery;
 import com.criteo.nosql.casspoke.discovery.Service;
+import com.datastax.driver.core.AuthProvider;
 import com.datastax.driver.core.Host;
+import com.datastax.driver.core.PlainTextAuthProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -118,11 +120,18 @@ public class CassandraRunner implements AutoCloseable, Runnable {
 
         // Create new ones
         final int timeoutInMs = Integer.parseInt(cfg.getApp().getOrDefault("timeoutInSec", "60")) * 1000;
+
+        Optional<AuthProvider> authProvider = Optional.empty();
+        if (cfg.getApp().containsKey("username") && cfg.getApp().containsKey("password")) {
+            authProvider = Optional.of(new PlainTextAuthProvider(cfg.getApp().get("username"), cfg.getApp().get("password")));
+        }
+        final Optional<AuthProvider> finalAuthProvider = authProvider;
+
         new_services.forEach((service, new_addresses) -> {
             if (!Objects.equals(services.get(service), new_addresses)) {
                 logger.info("A new Monitor for {} will be created.", service);
                 CassandraMetrics cassMetrics = new CassandraMetrics(service);
-                monitors.put(service, CassandraMonitor.fromNodes(service, new_addresses, timeoutInMs, (Host host) -> cassMetrics.clear()));
+                monitors.put(service, CassandraMonitor.fromNodes(service, new_addresses, timeoutInMs, (Host host) -> cassMetrics.clear(), finalAuthProvider));
                 metrics.put(service, cassMetrics);
             }
         });
