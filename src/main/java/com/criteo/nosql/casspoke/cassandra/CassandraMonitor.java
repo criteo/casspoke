@@ -39,7 +39,8 @@ public class CassandraMonitor implements AutoCloseable {
                 .bind();
     }
 
-    public static Optional<CassandraMonitor> fromNodes(final Service service, Set<InetSocketAddress> endPoints, int timeoutInMs, Consumer<Host> onHostRemoval) {
+    public static Optional<CassandraMonitor> fromNodes(final Service service, Set<InetSocketAddress> endPoints, int timeoutInMs, Consumer<Host> onHostRemoval,
+                                                       Optional<AuthProvider> authProvider) {
         if (endPoints.isEmpty()) {
             return Optional.empty();
         }
@@ -53,7 +54,7 @@ public class CassandraMonitor implements AutoCloseable {
 
             final WhiteLBPolicy lbPolicy = new WhiteLBPolicy(onHostRemoval);
 
-            final Cluster cluster = Cluster.builder()
+            final Cluster.Builder clusterBuilder = Cluster.builder()
                     .addContactPointsWithPorts(endPoints)
                     .withPoolingOptions(poolingOptions)
                     .withLoadBalancingPolicy(lbPolicy)
@@ -64,8 +65,13 @@ public class CassandraMonitor implements AutoCloseable {
                             .setReadTimeoutMillis(timeoutInMs)
                             .setReuseAddress(true)
                             .setSoLinger(timeoutInMs)
-                    )
-                    .build();
+                    );
+
+            if (authProvider.isPresent()) {
+                clusterBuilder.withAuthProvider(authProvider.get());
+            }
+
+            final Cluster cluster = clusterBuilder.build();
             return Optional.of(new CassandraMonitor(service, cluster, lbPolicy, timeoutInMs));
         } catch (Exception e) {
             logger.error("Cannot create connection to cluster", e);
