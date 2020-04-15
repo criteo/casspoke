@@ -2,13 +2,13 @@ package com.criteo.nosql.casspoke.discovery;
 
 import com.criteo.nosql.casspoke.config.Config;
 import com.ecwid.consul.v1.ConsistencyMode;
-import com.ecwid.consul.v1.ConsulClient;
 import com.ecwid.consul.v1.QueryParams;
 import com.ecwid.consul.v1.catalog.CatalogClient;
 import com.ecwid.consul.v1.catalog.CatalogConsulClient;
 import com.ecwid.consul.v1.health.HealthClient;
 import com.ecwid.consul.v1.health.HealthConsulClient;
 import com.ecwid.consul.v1.health.model.HealthService;
+import com.google.common.base.Strings;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,7 +81,10 @@ public class ConsulDiscovery implements IDiscovery {
                     )
                     .forEach(hsrv -> {
                         logger.debug("{}", hsrv.getNode());
-                        nodes.add(new InetSocketAddress(hsrv.getNode().getAddress(), hsrv.getService().getPort()));
+                        String srvAddr = Strings.isNullOrEmpty(hsrv.getService().getAddress())
+                                ? hsrv.getNode().getAddress()
+                                : hsrv.getService().getAddress();
+                        nodes.add(new InetSocketAddress(srvAddr, hsrv.getService().getPort()));
                         srv[0] = new Service(getClusterName(hsrv.getService()));
                     });
             if (nodes.size() > 0) {
