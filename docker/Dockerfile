@@ -1,7 +1,7 @@
 FROM openjdk:11.0.1-jre-slim-sid
 
-ARG CASSPOKE_VERSION=1.3
-ARG CASSPOKE_SHA512=8b5acbe3df57d0309d7e1c2ceabdfb134e87a7d188a99f9e827c1910a05fb48782811fbf5cd9a6ed01201118001e74fc4450409d3898eb4833c5cfc02bde8845
+ARG CASSPOKE_VERSION=1.3.1
+ARG CASSPOKE_SHA512=eca9280a70af3c556f46d33bb15de4b63f3e04b67a13fc25b53119d5afe3ad8d12a82d5cf8be7df67eaf3ba2791df715d2787c575ecef644550046a2c52a97a9
 
 RUN mkdir -p /opt/casspoke
 ADD https://github.com/Yelp/dumb-init/releases/download/v1.2.2/dumb-init_1.2.2_amd64 /sbin/dumb-init
