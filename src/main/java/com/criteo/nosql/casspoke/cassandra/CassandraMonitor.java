@@ -80,22 +80,22 @@ public class CassandraMonitor implements AutoCloseable {
 
     }
 
-    public Map<InetSocketAddress, Boolean> collectAvailability() {
+    public Map<Host, Boolean> collectAvailability() {
 
-        final Map<InetSocketAddress, Boolean> availabilities = new HashMap<>();
+        final Map<Host, Boolean> availabilities = new HashMap<>();
 
         final Session.State state = session.getState();
         for (Host host : cluster.getMetadata().getAllHosts()) {
             final int connections = state.getOpenConnections(host);
-            availabilities.put(host.getSocketAddress(), connections > 0);
+            availabilities.put(host, connections > 0);
             logger.debug("%s connections=%d\n", host, connections);
         }
 
         return availabilities;
     }
 
-    public Map<InetSocketAddress, Long> collectGetLatencies() {
-        final Map<InetSocketAddress, Long> getLatencies = new HashMap<>();
+    public Map<Host, Long> collectGetLatencies() {
+        final Map<Host, Long> getLatencies = new HashMap<>();
         for (int count = cluster.getMetadata().getAllHosts().size(); count > 0; count--) {
 
             long duration = timeoutInMs;
@@ -107,13 +107,13 @@ public class CassandraMonitor implements AutoCloseable {
                 logger.error("Error while reading from {} ", lbPolicy.theLastTargetedHost.get(), e);
             }
             final Host host = lbPolicy.theLastTargetedHost.get();
-            getLatencies.put(host.getSocketAddress(), duration);
+            getLatencies.put(host, duration);
         }
         return getLatencies;
     }
 
-    public Map<InetSocketAddress, Long> collectSetLatencies() {
-        final Map<InetSocketAddress, Long> setLatencies = new HashMap<>();
+    public Map<Host, Long> collectSetLatencies() {
+        final Map<Host, Long> setLatencies = new HashMap<>();
 
         for (int count = cluster.getMetadata().getAllHosts().size(); count > 0; count--) {
 
@@ -127,7 +127,7 @@ public class CassandraMonitor implements AutoCloseable {
             }
 
             final Host host = lbPolicy.theLastTargetedHost.get();
-            setLatencies.put(host.getSocketAddress(), duration);
+            setLatencies.put(host, duration);
         }
         return setLatencies;
     }
