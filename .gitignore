@@ -7,7 +7,6 @@
 *.log
 
 # Package Files #
-*.jar
 *.war
 *.ear
 *.zip
@@ -20,8 +19,6 @@ hs_err_pid*
 # IDE specific
 .idea/
 *.iml
-gradlew
-gradlew.bat
 
 # Build repository
 target/
@@ -29,6 +26,5 @@ build/
 
 # Gradle build system
 .gradle/
-gradle/
 .gitignore
 build
