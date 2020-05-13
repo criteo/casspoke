@@ -6,7 +6,7 @@ RUN mkdir -p /opt/casspoke
 ADD https://github.com/Yelp/dumb-init/releases/download/v1.2.2/dumb-init_1.2.2_amd64 /sbin/dumb-init
 ADD https://github.com/criteo/casspoke/releases/download/${CASSPOKE_VERSION}/casspoke-${CASSPOKE_VERSION}.jar /opt/casspoke/casspoke.jar
 ADD config.yml /opt/casspoke/
-ADD run.sh /
+ADD docker/run.sh /
 
 RUN chmod +x /sbin/dumb-init ; \
     chmod 444 /opt/casspoke/*
