@@ -1,5 +1,7 @@
 package com.criteo.nosql.casspoke.cassandra;
 
+import com.criteo.nosql.casspoke.cassandra.metrics.CassandraMetrics;
+import com.criteo.nosql.casspoke.cassandra.metrics.CassandraMetricsFactory;
 import com.criteo.nosql.casspoke.config.Config;
 import com.criteo.nosql.casspoke.discovery.IDiscovery;
 import com.criteo.nosql.casspoke.discovery.Service;
@@ -21,6 +23,8 @@ public class CassandraRunner implements AutoCloseable, Runnable {
     private final long measurementPeriodInMs;
     private final long refreshDiscoveryPeriodInMs;
 
+    private final CassandraMetricsFactory cassandraMetricsFactory;
+
     protected Map<Service, Set<InetSocketAddress>> services;
     protected final Map<Service, Optional<CassandraMonitor>> monitors;
     protected final Map<Service, CassandraMetrics> metrics;
@@ -31,6 +35,8 @@ public class CassandraRunner implements AutoCloseable, Runnable {
         this.discovery = discovery;
         this.measurementPeriodInMs = Long.parseLong(cfg.getApp().getOrDefault("measurementPeriodInSec", "30")) * 1000L;
         this.refreshDiscoveryPeriodInMs = Long.parseLong(cfg.getApp().getOrDefault("refreshDiscoveryPeriodInSec", "300")) * 1000L;
+
+        this.cassandraMetricsFactory = CassandraMetricsFactory.getInstance(cfg);
 
         this.services = Collections.emptyMap();
         this.monitors = new HashMap<>();
@@ -130,7 +136,7 @@ public class CassandraRunner implements AutoCloseable, Runnable {
         new_services.forEach((service, new_addresses) -> {
             if (!Objects.equals(services.get(service), new_addresses)) {
                 logger.info("A new Monitor for {} will be created.", service);
-                CassandraMetrics cassMetrics = new CassandraMetrics(service);
+                CassandraMetrics cassMetrics = cassandraMetricsFactory.createMetrics(service);
                 monitors.put(service, CassandraMonitor.fromNodes(service, new_addresses, timeoutInMs, (Host host) -> cassMetrics.clear(), finalAuthProvider));
                 metrics.put(service, cassMetrics);
             }
