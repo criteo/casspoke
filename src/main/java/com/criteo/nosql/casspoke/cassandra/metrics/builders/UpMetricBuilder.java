@@ -8,19 +8,19 @@ import java.util.Optional;
 public class UpMetricBuilder {
 
     private final Optional<String> labelPrefix;
-    private final Optional<String> proberLocation;
+    private final Optional<String> probeLocation;
 
     public UpMetricBuilder(Config cfg) {
         this.labelPrefix = Optional.ofNullable(cfg.getApp().get("labelPrefix"));
-        this.proberLocation = Optional.ofNullable(cfg.getApp().get("proberLocation"));
+        this.probeLocation = Optional.ofNullable(cfg.getApp().get("probeLocation"));
     }
 
     public Gauge build() {
         String cluster = withPrefixFromConfig("cluster");
         String instance = withPrefixFromConfig("instance");
         String datacenter = withPrefixFromConfig("datacenter");
-        return proberLocation
-                .map(location -> createGauge(cluster, instance, datacenter, location))
+        return probeLocation
+                .map(location -> createGauge(cluster, instance, datacenter, withPrefixFromConfig("probeLocation")))
                 .orElseGet(() -> createGauge(cluster, instance, datacenter));
     }
 

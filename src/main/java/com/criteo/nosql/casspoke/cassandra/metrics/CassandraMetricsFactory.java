@@ -15,12 +15,12 @@ public class CassandraMetricsFactory {
 
     private final Gauge up;
     private final Summary latency;
-    private final Optional<String> proberLocation;
+    private final Optional<String> probeLocation;
 
     private CassandraMetricsFactory(Config cfg) {
         this.up = new UpMetricBuilder(cfg).build();
         this.latency = new LatencyMetricBuilder(cfg).build();
-        this.proberLocation = Optional.ofNullable(cfg.getApp().get("proberLocation"));
+        this.probeLocation = Optional.ofNullable(cfg.getApp().get("probeLocation"));
     }
 
     public static CassandraMetricsFactory getInstance(Config cfg) {
@@ -37,7 +37,7 @@ public class CassandraMetricsFactory {
     }
 
     public CassandraMetrics createMetrics(Service service) {
-        return proberLocation
+        return probeLocation
                 .map(location -> new CassandraMetrics(service.getClusterName(), location, up, latency))
                 .orElseGet(() -> new CassandraMetrics(service.getClusterName(), up, latency));
     }

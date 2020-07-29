@@ -37,6 +37,10 @@ app:
   # username: user
   # Optional: password used to auth to cassandra
   # password: password
+  # Optional: probe location to see which data center or cloud have problems with connection to cassandra
+  # probeLocation: myGreatDataCenter
+  # Optional: label prefix, change it to avoid collisions with other labels, appended to metric, by Prometheus server
+  # labelPrefix: cassandra
 
 discovery:
   dns:

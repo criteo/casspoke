@@ -8,11 +8,11 @@ import java.util.Optional;
 public class LatencyMetricBuilder {
 
     private final Optional<String> labelPrefix;
-    private final Optional<String> proberLocation;
+    private final Optional<String> probeLocation;
 
     public LatencyMetricBuilder(Config cfg) {
         this.labelPrefix = Optional.ofNullable(cfg.getApp().get("labelPrefix"));
-        this.proberLocation = Optional.ofNullable(cfg.getApp().get("proberLocation"));
+        this.probeLocation = Optional.ofNullable(cfg.getApp().get("probeLocation"));
     }
 
     public Summary build() {
@@ -20,8 +20,8 @@ public class LatencyMetricBuilder {
         String instance = withPrefixFromConfig("instance");
         String command = withPrefixFromConfig("command");
         String datacenter = withPrefixFromConfig("datacenter");
-        return proberLocation
-                .map(location -> createSummary(cluster, instance, command, datacenter, location))
+        return probeLocation
+                .map(location -> createSummary(cluster, instance, command, datacenter, withPrefixFromConfig("probeLocation")))
                 .orElseGet(() -> createSummary(cluster, instance, command, datacenter));
     }
 

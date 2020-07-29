@@ -13,27 +13,27 @@ public class CassandraMetrics implements AutoCloseable {
     private final Summary latency;
 
     private final String clusterName;
-    private final Optional<String> proberLocation;
+    private final Optional<String> probeLocation;
 
-    public CassandraMetrics(String clusterName, String proberLocation, Gauge up, Summary latency) {
+    public CassandraMetrics(String clusterName, String probeLocation, Gauge up, Summary latency) {
         this.up = up;
         this.latency = latency;
         this.clusterName = clusterName;
-        this.proberLocation = Optional.of(proberLocation);
+        this.probeLocation = Optional.of(probeLocation);
     }
 
     public CassandraMetrics(String clusterName, Gauge up, Summary latency) {
         this.up = up;
         this.latency = latency;
         this.clusterName = clusterName;
-        this.proberLocation = Optional.empty();
+        this.probeLocation = Optional.empty();
     }
 
     public void updateAvailability(Map<Host, Boolean> availabilities) {
         availabilities.forEach((host, availability) -> {
             String hostName = host.getSocketAddress().getHostName();
             String datacenter = host.getDatacenter();
-            proberLocation
+            probeLocation
                     .map(location -> this.up.labels(clusterName, hostName, datacenter, location))
                     .orElseGet(() -> this.up.labels(clusterName, hostName, datacenter))
                     .set(availability ? 1 : 0);
@@ -54,7 +54,7 @@ public class CassandraMetrics implements AutoCloseable {
         latencies.forEach((host, latency) -> {
             String hostName = host.getSocketAddress().getHostName();
             String datacenter = host.getDatacenter();
-            proberLocation
+            probeLocation
                     .map(location -> this.latency.labels(clusterName, hostName, command, datacenter, location))
                     .orElseGet(() -> this.latency.labels(clusterName, hostName, command, datacenter))
                     .observe(latency);
