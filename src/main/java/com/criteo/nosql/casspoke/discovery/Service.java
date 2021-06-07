@@ -1,14 +1,22 @@
 package com.criteo.nosql.casspoke.discovery;
 
+import java.util.List;
+
 public class Service {
     private final String clusterName;
+    private final List<String> tags;
 
-    public Service(String clusterName) {
+    public Service(String clusterName, List<String> tags) {
         this.clusterName = clusterName;
+        this.tags = tags;
     }
 
     public String getClusterName() {
         return clusterName;
+    }
+
+    public List<String> getTags() {
+        return tags;
     }
 
     @Override

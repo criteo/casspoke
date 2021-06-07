@@ -25,7 +25,8 @@ public class DnsDiscovery implements IDiscovery{
                 addrs.add(new InetSocketAddress(host_port[0], host_port.length > 1 ? Integer.parseInt(host_port[1]) : 9042));
 
             }
-            clusters.put(new Service(entry.getClustername()), addrs);
+            List<String> tags = new ArrayList<>(); // not available for DnsDiscovery
+            clusters.put(new Service(entry.getClustername(), tags), addrs);
         }
         return clusters;
     }

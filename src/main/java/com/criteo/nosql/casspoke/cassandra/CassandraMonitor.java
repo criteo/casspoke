@@ -1,5 +1,6 @@
 package com.criteo.nosql.casspoke.cassandra;
 
+import com.criteo.nosql.casspoke.config.Config;
 import com.criteo.nosql.casspoke.discovery.Service;
 import com.datastax.driver.core.*;
 import com.datastax.driver.core.utils.UUIDs;
@@ -39,7 +40,10 @@ public class CassandraMonitor implements AutoCloseable {
                 .bind();
     }
 
-    public static Optional<CassandraMonitor> fromNodes(final Service service, Set<InetSocketAddress> endPoints, int timeoutInMs, Consumer<Host> onHostRemoval,
+    public static Optional<CassandraMonitor> fromNodes(boolean useSsl,
+                                                       final Service service,
+                                                       Set<InetSocketAddress> endPoints,
+                                                       int timeoutInMs, Consumer<Host> onHostRemoval,
                                                        Optional<AuthProvider> authProvider) {
         if (endPoints.isEmpty()) {
             return Optional.empty();
@@ -69,6 +73,10 @@ public class CassandraMonitor implements AutoCloseable {
 
             if (authProvider.isPresent()) {
                 clusterBuilder.withAuthProvider(authProvider.get());
+            }
+
+            if (useSsl) {
+                clusterBuilder.withSSL();
             }
 
             final Cluster cluster = clusterBuilder.build();
