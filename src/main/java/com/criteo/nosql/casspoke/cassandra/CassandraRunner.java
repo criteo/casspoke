@@ -20,6 +20,7 @@ public class CassandraRunner implements AutoCloseable, Runnable {
     private final IDiscovery discovery;
     private final long measurementPeriodInMs;
     private final long refreshDiscoveryPeriodInMs;
+    private final List<String> tagsWithSsl;
 
     protected Map<Service, Set<InetSocketAddress>> services;
     protected final Map<Service, Optional<CassandraMonitor>> monitors;
@@ -31,6 +32,10 @@ public class CassandraRunner implements AutoCloseable, Runnable {
         this.discovery = discovery;
         this.measurementPeriodInMs = Long.parseLong(cfg.getApp().getOrDefault("measurementPeriodInSec", "30")) * 1000L;
         this.refreshDiscoveryPeriodInMs = Long.parseLong(cfg.getApp().getOrDefault("refreshDiscoveryPeriodInSec", "300")) * 1000L;
+        if (cfg.getTagsWithSsl() == null) {
+            this.tagsWithSsl = Collections.singletonList("ssl");
+        }
+        else this.tagsWithSsl = cfg.getTagsWithSsl();
 
         this.services = Collections.emptyMap();
         this.monitors = new HashMap<>();
@@ -131,7 +136,11 @@ public class CassandraRunner implements AutoCloseable, Runnable {
             if (!Objects.equals(services.get(service), new_addresses)) {
                 logger.info("A new Monitor for {} will be created.", service);
                 CassandraMetrics cassMetrics = new CassandraMetrics(service);
-                monitors.put(service, CassandraMonitor.fromNodes(service, new_addresses, timeoutInMs, (Host host) -> cassMetrics.clear(), finalAuthProvider));
+                monitors.put(service, CassandraMonitor.fromNodes(!Collections.disjoint(service.getTags(), tagsWithSsl),
+                                                                 service,
+                                                                 new_addresses,
+                                                                 timeoutInMs,
+                                                                 (Host host) -> cassMetrics.clear(), finalAuthProvider));
                 metrics.put(service, cassMetrics);
             }
         });

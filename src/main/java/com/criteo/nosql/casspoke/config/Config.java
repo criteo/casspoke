@@ -5,9 +5,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Configuration class that are use by the app
@@ -19,6 +17,7 @@ public final class Config {
 
     public static final String DEFAULT_PATH = "config.yml";
 
+    private List<String> tagsWithSsl;
     private Map<String, String> app;
     private Discovery discovery;
 
@@ -33,6 +32,10 @@ public final class Config {
 
     public Map<String, String> getApp() {
         return app;
+    }
+
+    public List<String> getTagsWithSsl() {
+        return tagsWithSsl;
     }
 
     public static class ConsulDiscovery {

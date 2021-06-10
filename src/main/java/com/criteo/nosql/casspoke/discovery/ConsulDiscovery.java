@@ -20,7 +20,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 
 /**
  * Provide a discovery based on Consul.
@@ -59,18 +59,17 @@ public class ConsulDiscovery implements IDiscovery {
 
     private Map<Service, Set<InetSocketAddress>> getServicesNodesByTags(final List<String> tags) {
         final CatalogClient client = new CatalogConsulClient(host, port);
-        final List<String> serviceNames =
+        final Map<String, List<String>> serviceNamesWithTags =
                 client.getCatalogServices(params).getValue().entrySet().stream()
                         .filter(entry -> !Collections.disjoint(entry.getValue(), tags))
-                        .map(Map.Entry::getKey)
-                        .collect(toList());
-        return getServicesNodesByServices(serviceNames);
+                        .collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
+        return getServicesNodesByServices(serviceNamesWithTags);
     }
 
-    private Map<Service, Set<InetSocketAddress>> getServicesNodesByServices(final List<String> serviceNames) {
+    private Map<Service, Set<InetSocketAddress>> getServicesNodesByServices(final Map<String, List<String>> serviceNamesWithTags) {
         final HealthClient client = new HealthConsulClient(host, port);
-        final Map<Service, Set<InetSocketAddress>> servicesNodes = new HashMap<>(serviceNames.size());
-        for (String serviceName : serviceNames) {
+        final Map<Service, Set<InetSocketAddress>> servicesNodes = new HashMap<>(serviceNamesWithTags.size());
+        for (String serviceName : serviceNamesWithTags.keySet()) {
             final Set<InetSocketAddress> nodes = new HashSet<>();
             final Service[] srv = new Service[]{null};
             client.getHealthServices(serviceName, false, params).getValue().stream()
@@ -85,7 +84,7 @@ public class ConsulDiscovery implements IDiscovery {
                                 ? hsrv.getNode().getAddress()
                                 : hsrv.getService().getAddress();
                         nodes.add(new InetSocketAddress(srvAddr, hsrv.getService().getPort()));
-                        srv[0] = new Service(getClusterName(hsrv.getService()));
+                        srv[0] = new Service(getClusterName(hsrv.getService()), serviceNamesWithTags.get(serviceName));
                     });
             if (nodes.size() > 0) {
                 logger.info("Found {} nodes for {}", nodes.size(), srv[0]);
