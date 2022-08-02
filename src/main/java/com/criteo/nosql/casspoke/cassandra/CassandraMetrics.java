@@ -37,7 +37,7 @@ public class CassandraMetrics implements AutoCloseable
 
     public void updateAvailability(Map<Host, Boolean> availabilities) {
         availabilities.forEach((host, availability) -> {
-            UP      .labels(clusterName, host.getSocketAddress().getHostName(), host.getDatacenter())
+            UP      .labels(clusterName, host.getSocketAddress().getHostString(), host.getDatacenter())
                     .set(availability ? 1 : 0);
         });
     }
@@ -45,7 +45,7 @@ public class CassandraMetrics implements AutoCloseable
     public void updateGetLatency(final Map<Host, Long> latencies)
     {
         latencies.forEach((host, latency) -> {
-            LATENCY .labels(clusterName, host.getSocketAddress().getHostName(), "get", host.getDatacenter())
+            LATENCY .labels(clusterName, host.getSocketAddress().getHostString(), "get", host.getDatacenter())
                     .observe(latency);
         });
     }
@@ -53,7 +53,7 @@ public class CassandraMetrics implements AutoCloseable
     public void updateSetLatency(final Map<Host, Long> latencies)
     {
         latencies.forEach((host, latency) -> {
-            LATENCY .labels(clusterName, host.getSocketAddress().getHostName(), "set", host.getDatacenter())
+            LATENCY .labels(clusterName, host.getSocketAddress().getHostString(), "set", host.getDatacenter())
                     .observe(latency);
         });
     }
