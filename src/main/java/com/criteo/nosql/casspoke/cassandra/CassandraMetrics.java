@@ -14,14 +14,14 @@ public class CassandraMetrics implements AutoCloseable
     public static final Gauge UP = Gauge.build()
             .name("cassandra_up")
             .help("Are the servers up?")
-            .labelNames("cluster", "instance", "datacenter")
+            .labelNames("cluster", "instance", "rack", "datacenter")
             .create().register();
 
     // TODO: public for tests. It has to be improved
     public static final Summary LATENCY = Summary.build()
             .name("cassandra_latency")
             .help("latencies observed by instance and command")
-            .labelNames("cluster", "instance", "command", "datacenter")
+            .labelNames("cluster", "instance", "rack", "command", "datacenter")
             .maxAgeSeconds(5 * 60)
             .ageBuckets(5)
             .quantile(0.5, 0.05)
@@ -37,7 +37,7 @@ public class CassandraMetrics implements AutoCloseable
 
     public void updateAvailability(Map<Host, Boolean> availabilities) {
         availabilities.forEach((host, availability) -> {
-            UP      .labels(clusterName, host.getSocketAddress().getHostString(), host.getDatacenter())
+            UP      .labels(clusterName, host.getAddress().getHostAddress(), host.getRack(), host.getDatacenter())
                     .set(availability ? 1 : 0);
         });
     }
@@ -45,7 +45,7 @@ public class CassandraMetrics implements AutoCloseable
     public void updateGetLatency(final Map<Host, Long> latencies)
     {
         latencies.forEach((host, latency) -> {
-            LATENCY .labels(clusterName, host.getSocketAddress().getHostString(), "get", host.getDatacenter())
+            LATENCY .labels(clusterName, host.getAddress().getHostAddress(), host.getRack(), "get", host.getDatacenter())
                     .observe(latency);
         });
     }
@@ -53,7 +53,7 @@ public class CassandraMetrics implements AutoCloseable
     public void updateSetLatency(final Map<Host, Long> latencies)
     {
         latencies.forEach((host, latency) -> {
-            LATENCY .labels(clusterName, host.getSocketAddress().getHostString(), "set", host.getDatacenter())
+            LATENCY .labels(clusterName, host.getAddress().getHostAddress(), host.getRack(), "set", host.getDatacenter())
                     .observe(latency);
         });
     }
